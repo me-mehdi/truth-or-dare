@@ -21,17 +21,17 @@ const content = {
     Couples: {
         truths: [
             "What was your first impression of me?",
-            "[18+ Placeholder Truth 1: Share a deeply personal fantasy]",
-            "[18+ Placeholder Truth 2: What is your biggest relationship fear?]",
-            "[18+ Placeholder Truth 3: Describe your perfect romantic evening]",
-            "[18+ Placeholder Truth 4: What is a secret you've kept from past partners?]"
+            "What is a secret fantasy you haven't shared with me yet?",
+            "What is your biggest relationship fear?",
+            "Describe your perfect romantic evening.",
+            "What is a secret you've kept from past partners?"
         ],
         dares: [
             "Give me a 1-minute massage.",
-            "[18+ Placeholder Dare 1: Sensual dance]",
-            "[18+ Placeholder Dare 2: Blindfolded taste test]",
-            "[18+ Placeholder Dare 3: Whisper a secret seductively]",
-            "[18+ Placeholder Dare 4: Kiss a designated body part]"
+            "Perform a sensual dance for 1 minute.",
+            "Let me do a blindfolded taste test on you.",
+            "Whisper a secret seductively in my ear.",
+            "Kiss your favorite spot on my body."
         ]
     }
 };
@@ -200,8 +200,8 @@ export default function App() {
                         onClick={startGame}
                         disabled={players.length === 0}
                         className={`w-full py-4 rounded-xl font-bold text-xl uppercase tracking-wider transition-all duration-300 ${players.length > 0
-                                ? 'bg-gradient-to-r from-neon-purple to-neon-blue text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-[1.02]'
-                                : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+                            ? 'bg-gradient-to-r from-neon-purple to-neon-blue text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-[1.02]'
+                            : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
                             }`}
                     >
                         Start Game
@@ -250,8 +250,8 @@ export default function App() {
 
                         {turnPhase === 'task' && (
                             <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${currentTask.type === 'truth'
-                                    ? 'border-neon-blue shadow-[0_0_30px_rgba(6,182,212,0.3)]'
-                                    : 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]'
+                                ? 'border-neon-blue shadow-[0_0_30px_rgba(6,182,212,0.3)]'
+                                : 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]'
                                 }`}>
                                 <h3 className={`text-2xl font-bold uppercase tracking-widest mb-6 ${currentTask.type === 'truth' ? 'text-neon-blue' : 'text-neon-pink'
                                     }`}>
@@ -272,8 +272,8 @@ export default function App() {
                                     <button
                                         onClick={() => handleOutcome(true)}
                                         className={`flex-1 py-4 rounded-xl font-bold text-white transition-all shadow-lg ${currentTask.type === 'truth'
-                                                ? 'bg-neon-blue hover:bg-neon-blue/80 hover:shadow-[0_0_20px_rgba(6,182,212,0.6)]'
-                                                : 'bg-neon-pink hover:bg-neon-pink/80 hover:shadow-[0_0_20px_rgba(236,72,153,0.6)]'
+                                            ? 'bg-neon-blue hover:bg-neon-blue/80 hover:shadow-[0_0_20px_rgba(6,182,212,0.6)]'
+                                            : 'bg-neon-pink hover:bg-neon-pink/80 hover:shadow-[0_0_20px_rgba(236,72,153,0.6)]'
                                             }`}
                                     >
                                         I did it (+1)
