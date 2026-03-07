@@ -2,38 +2,30 @@ import { useState, useEffect } from 'react';
 
 // --- CONTENT ---
 const content = {
-    Friends: {
-        truths: [
-            "What is your most embarrassing memory?",
-            "Who was your first crush?",
-            "Have you ever lied to get out of trouble?",
-            "What is the most childish thing you still do?",
-            "What is a secret you have never told anyone here?"
-        ],
-        dares: [
-            "Do 10 pushups right now.",
-            "Let someone write a word on your forehead with a marker.",
-            "Sing the chorus of your favorite song loudly.",
-            "Do an impression of someone in the room until someone guesses who it is.",
-            "Speak in an accent for the next 3 rounds."
-        ]
-    },
-    Couples: {
-        truths: [
-            "What was your first impression of me?",
-            "What is a secret fantasy you haven't shared with me yet?",
-            "What is your biggest relationship fear?",
-            "Describe your perfect romantic evening.",
-            "What is a secret you've kept from past partners?"
-        ],
-        dares: [
-            "Give me a 1-minute massage.",
-            "Perform a sensual dance for 1 minute.",
-            "Let me do a blindfolded taste test on you.",
-            "Whisper a secret seductively in my ear.",
-            "Kiss your favorite spot on my body."
-        ]
-    }
+    truths: [
+        "What is your most embarrassing memory?",
+        "Who was your first crush?",
+        "Have you ever lied to get out of trouble?",
+        "What is the most childish thing you still do?",
+        "What is a secret you have never told anyone here?",
+        "What was your first impression of me?",
+        "What is a secret fantasy you haven't shared with me yet?",
+        "What is your biggest relationship fear?",
+        "Describe your perfect romantic evening.",
+        "What is a secret you've kept from past partners?"
+    ],
+    dares: [
+        "Do 10 pushups right now.",
+        "Let someone write a word on your forehead with a marker.",
+        "Sing the chorus of your favorite song loudly.",
+        "Do an impression of someone in the room until someone guesses who it is.",
+        "Speak in an accent for the next 3 rounds.",
+        "Give me a 1-minute massage.",
+        "Perform a sensual dance for 1 minute.",
+        "Let me do a blindfolded taste test on you.",
+        "Whisper a secret seductively in my ear.",
+        "Kiss your favorite spot on my body."
+    ]
 };
 
 // --- ICONS (lucide-react stand-ins using simple SVG) ---
@@ -45,8 +37,7 @@ const TrashIcon = () => (
 
 export default function App() {
     // --- STATE ---
-    const [phase, setPhase] = useState('landing'); // landing, players, gameplay
-    const [mode, setMode] = useState(null); // 'Friends' or 'Couples'
+    const [phase, setPhase] = useState('players'); // players, gameplay
 
     const [players, setPlayers] = useState([]); // [{ id, name, score }]
     const [newPlayerName, setNewPlayerName] = useState('');
@@ -57,11 +48,6 @@ export default function App() {
     const [currentTask, setCurrentTask] = useState({ type: null, text: null });
 
     // --- HANDLERS ---
-    const selectMode = (selectedMode) => {
-        setMode(selectedMode);
-        setPhase('players');
-    };
-
     const addPlayer = (e) => {
         e.preventDefault();
         if (!newPlayerName.trim()) return;
@@ -87,7 +73,7 @@ export default function App() {
     };
 
     const handleChoice = (type) => {
-        const questions = content[mode][type === 'truth' ? 'truths' : 'dares'];
+        const questions = content[type === 'truth' ? 'truths' : 'dares'];
         const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
         setCurrentTask({ type, text: randomQuestion });
         setTurnPhase('task');
@@ -124,37 +110,6 @@ export default function App() {
             {/* Background glow effects */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-neon-purple/20 rounded-full blur-[100px] pointer-events-none"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neon-blue/20 rounded-full blur-[100px] pointer-events-none"></div>
-
-            {phase === 'landing' && (
-                <div className="z-10 flex flex-col items-center animate-in fade-in zoom-in duration-500">
-                    <h1 className="text-5xl md:text-7xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-br from-neon-pink via-neon-purple to-neon-blue filter drop-shadow-[0_0_20px_rgba(236,72,153,0.5)]">
-                        TRUTH
-                    </h1>
-                    <h1 className="text-4xl md:text-5xl font-italic mb-2 text-zinc-500">
-                        OR
-                    </h1>
-                    <h1 className="text-5xl md:text-7xl font-black mb-12 text-transparent bg-clip-text bg-gradient-to-br from-neon-blue via-neon-purple to-neon-pink filter drop-shadow-[0_0_20px_rgba(6,182,212,0.5)]">
-                        DARE
-                    </h1>
-
-                    <div className="flex flex-col w-full max-w-xs gap-4">
-                        <button
-                            onClick={() => selectMode('Friends')}
-                            className="group relative px-6 py-4 rounded-2xl bg-zinc-900 border-2 border-neon-blue text-neon-blue font-bold text-xl uppercase tracking-widest hover:bg-neon-blue/10 transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]"
-                        >
-                            Friends
-                            <span className="block text-xs text-zinc-400 mt-1 font-normal tracking-normal normal-case group-hover:text-neon-blue/70 transition-colors">General / Fun</span>
-                        </button>
-                        <button
-                            onClick={() => selectMode('Couples')}
-                            className="group relative px-6 py-4 rounded-2xl bg-zinc-900 border-2 border-neon-pink text-neon-pink font-bold text-xl uppercase tracking-widest hover:bg-neon-pink/10 transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.3)] hover:shadow-[0_0_30px_rgba(236,72,153,0.6)]"
-                        >
-                            Couples
-                            <span className="block text-xs text-zinc-400 mt-1 font-normal tracking-normal normal-case group-hover:text-neon-pink/70 transition-colors">Adults 18+</span>
-                        </button>
-                    </div>
-                </div>
-            )}
 
             {phase === 'players' && (
                 <div className="z-10 flex flex-col items-center w-full max-w-md animate-in slide-in-from-bottom duration-500">
