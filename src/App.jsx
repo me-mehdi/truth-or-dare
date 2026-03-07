@@ -12,19 +12,29 @@ const content = {
         "What is a secret fantasy you haven't shared with me yet?",
         "What is your biggest relationship fear?",
         "Describe your perfect romantic evening.",
-        "What is a secret you've kept from past partners?"
+        "What is a secret you've kept from past partners?",
+        "What was the very first thing you noticed about me when we met?",
+        "What is your biggest 'green flag' in a partner?",
+        "What is the most spontaneous thing you’ve ever done on a date?",
+        "What is your favorite physical feature on yourself?",
+        "What’s the most romantic thing someone has ever done for you?",
+        "What’s the best compliment you’ve ever received?",
+        "What was your most awkward dating experience?",
+        "Do you believe in chemistry at first sight?",
+        "What’s the most adventurous thing you’ve ever did?"
     ],
     dares: [
-        "Do 10 pushups right now.",
-        "Let someone write a word on your forehead with a marker.",
         "Sing the chorus of your favorite song loudly.",
-        "Do an impression of someone in the room until someone guesses who it is.",
         "Speak in an accent for the next 3 rounds.",
         "Give me a 1-minute massage.",
         "Perform a sensual dance for 1 minute.",
         "Let me do a blindfolded taste test on you.",
         "Whisper a secret seductively in my ear.",
-        "Kiss your favorite spot on my body."
+        "Kiss your favorite spot on my body.",
+        "Show the most emberising photo in your gallery and tell me the story behind it.",
+        "Let’s take a selfie together right now.",
+        "Hold my hand for the next 2 minutes while we keep talking.",
+        "Let me check the last thing you searched for on Google."
     ]
 };
 
