@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon-purple: #a855f7;
+  --color-neon-pink: #ec4899;
+  --color-neon-blue: #06b6d4;
+  --color-neon-bg: #09090b;
+
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-neon-bg);
+    color: white;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 10px #ec4899, 0 0 20px #ec4899;
+  }
+  to {
+    box-shadow: 0 0 20px #a855f7, 0 0 30px #a855f7;
+  }
+}
+
+.text-glow {
+  text-shadow: 0 0 10px theme('colors.pink.500'), 0 0 20px theme('colors.purple.500');
+}
