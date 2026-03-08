@@ -7,7 +7,7 @@ const content = {
         "Who was your first crush?",
         "Have you ever lied to get out of trouble?",
         "What is the most childish thing you still do?",
-        "What is a secret you have never told anyone here?",
+        "What is a secret you have never told anyone?",
         "What was your first impression of me?",
         "What is a secret fantasy you haven't shared with me yet?",
         "What is your biggest relationship fear?",
@@ -21,7 +21,12 @@ const content = {
         "What’s the best compliment you’ve ever received?",
         "What was your most awkward dating experience?",
         "Do you believe in chemistry at first sight?",
-        "What’s the most adventurous thing you’ve ever did?"
+        "What’s the most adventurous thing you’ve ever did?",
+        "What was your first impression of me?",
+        "What is a secret fantasy you haven't shared with me yet?",
+        "What is your biggest relationship fear?",
+        "Describe your perfect romantic evening.",
+        "What is a secret you've kept from past partners?"
     ],
     dares: [
         "Sing the chorus of your favorite song loudly.",
@@ -34,7 +39,12 @@ const content = {
         "Show the most emberising photo in your gallery and tell me the story behind it.",
         "Let’s take a selfie together right now.",
         "Hold my hand for the next 2 minutes while we keep talking.",
-        "Let me check the last thing you searched for on Google."
+        "Let me check the last thing you searched for on Google.",
+        "Give me a 1-minute massage.",
+        "Perform a sensual dance for 1 minute.",
+        "Let me do a blindfolded taste test on you.",
+        "Whisper a secret seductively in my ear.",
+        "Kiss your favorite spot on my body."
     ]
 };
 
