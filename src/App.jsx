@@ -99,8 +99,18 @@ export default function App() {
 
     const startGame = () => {
         if (players.length === 0) return;
+        // reset scores if starting fresh
+        setPlayers(players.map(p => ({ ...p, score: 0 })));
         setPhase('gameplay');
         nextTurn();
+    };
+
+    const endGame = () => {
+        setPhase('endgame');
+    };
+
+    const resetGame = () => {
+        setPhase('players');
     };
 
     const nextTurn = () => {
@@ -129,16 +139,27 @@ export default function App() {
 
     // --- RENDERERS ---
     const renderScoreboard = () => (
-        <div className="absolute top-4 right-4 bg-zinc-900/80 backdrop-blur-md p-3 rounded-xl border border-neon-purple/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] min-w-[120px]">
-            <h3 className="text-xs uppercase tracking-wider text-neon-pink font-bold mb-2">Scores</h3>
-            <div className="space-y-1">
-                {players.sort((a, b) => b.score - a.score).map(p => (
-                    <div key={p.id} className="flex justify-between items-center text-sm">
-                        <span className="truncate max-w-[80px] text-gray-300">{p.name}</span>
-                        <span className="font-mono text-neon-blue font-bold">{p.score}</span>
-                    </div>
-                ))}
+        <div className="absolute top-4 right-4 flex flex-col items-end gap-3 z-50">
+            <div className="bg-zinc-900/80 backdrop-blur-md p-3 rounded-xl border border-neon-purple/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] min-w-[120px]">
+                <h3 className="text-xs uppercase tracking-wider text-neon-pink font-bold mb-2">Scores</h3>
+                <div className="space-y-1">
+                    {players.sort((a, b) => b.score - a.score).map(p => (
+                        <div key={p.id} className="flex justify-between items-center text-sm gap-4">
+                            <span className="truncate max-w-[80px] text-gray-300">{p.name}</span>
+                            <span className="font-mono text-neon-blue font-bold">{p.score}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
+
+            {phase === 'gameplay' && (
+                <button
+                    onClick={endGame}
+                    className="text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg border border-red-500/50 text-red-500 bg-zinc-900 hover:bg-red-500 hover:text-white transition-colors shadow-[0_0_10px_rgba(239,68,68,0.2)]"
+                >
+                    End Game
+                </button>
+            )}
         </div>
     );
 
@@ -283,6 +304,38 @@ export default function App() {
 
                     </div>
                 </>
+            )}
+
+            {phase === 'endgame' && (
+                <div className="z-10 flex flex-col items-center w-full max-w-md animate-in zoom-in duration-500">
+                    <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple mb-8 filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]">
+                        Game Over!
+                    </h2>
+
+                    <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-3xl p-6 mb-8 backdrop-blur-sm">
+                        <h3 className="text-xl uppercase tracking-widest text-zinc-400 text-center mb-6">Final Scores</h3>
+                        <div className="space-y-3">
+                            {players.sort((a, b) => b.score - a.score).map((p, index) => (
+                                <div key={p.id} className="flex justify-between items-center p-3 bg-zinc-800/50 rounded-xl">
+                                    <div className="flex items-center gap-4">
+                                        <span className={`font-black text-xl w-6 ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-zinc-500'}`}>
+                                            #{index + 1}
+                                        </span>
+                                        <span className="text-xl font-bold">{p.name}</span>
+                                    </div>
+                                    <span className="text-2xl font-mono font-black text-neon-pink">{p.score}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={resetGame}
+                        className="w-full py-4 rounded-xl font-bold text-xl uppercase tracking-wider transition-all duration-300 bg-gradient-to-r from-neon-pink to-neon-purple text-white shadow-[0_0_20px_rgba(236,72,153,0.5)] hover:shadow-[0_0_30px_rgba(236,72,153,0.8)] hover:scale-[1.02]"
+                    >
+                        Play Again
+                    </button>
+                </div>
             )}
 
         </div>
