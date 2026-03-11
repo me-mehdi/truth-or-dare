@@ -124,11 +124,13 @@ You MUST return the output as a raw JSON string matching exactly this schema and
             }
         } catch (e) { console.error("WYR fetch failed", e); }
 
-        const pool = fallbackData.would_you_rather;
-        if (pool && pool.length > 0) {
-            return pool[Math.floor(Math.random() * pool.length)];
+        let pool = fallbackPools.would_you_rather;
+        if (pool.length === 0) {
+            pool = [...fallbackData.would_you_rather].sort(() => 0.5 - Math.random());
         }
-        return { text: "API Error: Would you rather wait a minute or refresh the page?", optionA: "Wait", optionB: "Refresh", statsA: 50 };
+        const item = pool.pop();
+        setFallbackPools(prev => ({ ...prev, would_you_rather: pool }));
+        return item || { text: "API Error: Would you rather wait a minute or refresh the page?", optionA: "Wait", optionB: "Refresh", statsA: 50 };
     }
     const selectGame = (gameType) => {
         setSelectedGame(gameType);
