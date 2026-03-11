@@ -74,6 +74,18 @@ const content = {
         "Never have I ever crushed on a friend's partner.",
         "Never have I ever used a dating app while in a relationship.",
         "Never have I ever flirted my way out of a ticket or a problem."
+    ],
+    most_likely_to: [
+        "Most likely to end up in jail for something stupid.",
+        "Most likely to forget their own anniversary.",
+        "Most likely to become a millionaire and lose it all in a week.",
+        "Most likely to survive a zombie apocalypse.",
+        "Most likely to dramatically trip in public and pretend it was a dance move.",
+        "Most likely to talk their way out of a speeding ticket.",
+        "Most likely to secretly be a spy.",
+        "Most likely to spend all their money on a ridiculous impulse buy.",
+        "Most likely to randomly disappear and move to a new country.",
+        "Most likely to start a cult by accident."
     ]
 };
 
@@ -153,22 +165,32 @@ export default function App() {
             const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
             setCurrentTask({ type: 'never_have_i_ever', text: randomQuestion });
             setTurnPhase('task');
+        } else if (selectedGame === 'most_likely_to') {
+            const questions = content.most_likely_to;
+            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            setCurrentTask({ type: 'most_likely_to', text: randomQuestion });
+            setTurnPhase('task');
         }
     };
 
-    const handleOutcome = (success) => {
+    const handleOutcome = (successOrId) => {
         if (selectedGame === 'truth_or_dare') {
-            if (success) {
+            if (successOrId) {
                 setPlayers(players.map(p =>
                     p.id === currentPlayer.id ? { ...p, score: p.score + 1 } : p
                 ));
             }
         } else if (selectedGame === 'never_have_i_ever') {
-            if (success) { // "I have done it" = loses life
+            if (successOrId) { // "I have done it" = loses life
                 setPlayers(players.map(p =>
                     p.id === currentPlayer.id ? { ...p, lives: Math.max(0, p.lives - 1) } : p
                 ));
             }
+        } else if (selectedGame === 'most_likely_to') {
+            // successOrId is the voted player's ID
+            setPlayers(players.map(p =>
+                p.id === successOrId ? { ...p, score: p.score + 1 } : p
+            ));
         }
 
         setTurnPhase('outcome'); // Briefly show outcome? Or just go next. Let's just go next in a moment
@@ -335,7 +357,9 @@ export default function App() {
                                 <button
                                     onClick={() => {
                                         if (selectedGame === 'truth_or_dare') setTurnPhase('choice');
-                                        else handleChoice('never_have_i_ever'); // Skip choice phase for this game mode
+                                        else handleChoice('never_have_i_ever'); // Works for both never have i ever and most likely to since logic in handleChoice uses selectedGame state, passing dummy arg is fine. But wait, handleChoice requires no param for most likely to either.
+                                        // Let's call it explicitly:
+                                        if (selectedGame === 'most_likely_to') handleChoice('most_likely_to');
                                     }}
                                     className="mt-8 px-8 py-3 rounded-full border border-zinc-700 hover:bg-zinc-800 transition-colors"
                                 >
@@ -361,7 +385,7 @@ export default function App() {
                             </div>
                         )}
 
-                        {turnPhase === 'choice' && selectedGame !== 'truth_or_dare' && selectedGame !== 'never_have_i_ever' && (
+                        {turnPhase === 'choice' && selectedGame !== 'truth_or_dare' && selectedGame !== 'never_have_i_ever' && selectedGame !== 'most_likely_to' && (
                             <div className="flex flex-col w-full gap-6 animate-in slide-in-from-right duration-500 text-center">
                                 <p className="text-zinc-400 italic mb-4">Content for {selectedGame.replace(/_/g, ' ')} coming soon...</p>
                                 <button
@@ -374,36 +398,53 @@ export default function App() {
                         )}
 
                         {turnPhase === 'task' && (
-                            <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${selectedGame === 'never_have_i_ever' ? 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]' : currentTask.type === 'truth'
+                            <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${selectedGame === 'never_have_i_ever' ? 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]' : selectedGame === 'most_likely_to' ? 'border-neon-purple shadow-[0_0_30px_rgba(168,85,247,0.3)]' : currentTask.type === 'truth'
                                 ? 'border-neon-blue shadow-[0_0_30px_rgba(6,182,212,0.3)]'
                                 : 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]'
                                 }`}>
-                                <h3 className={`text-2xl font-bold uppercase tracking-widest mb-6 ${selectedGame === 'never_have_i_ever' ? 'text-neon-pink' : currentTask.type === 'truth' ? 'text-neon-blue' : 'text-neon-pink'
+                                <h3 className={`text-2xl font-bold uppercase tracking-widest mb-6 ${selectedGame === 'never_have_i_ever' ? 'text-neon-pink' : selectedGame === 'most_likely_to' ? 'text-neon-purple' : currentTask.type === 'truth' ? 'text-neon-blue' : 'text-neon-pink'
                                     }`}>
-                                    {selectedGame === 'never_have_i_ever' ? 'Never Have I Ever' : currentTask.type}
+                                    {selectedGame === 'never_have_i_ever' ? 'Never Have I Ever' : selectedGame === 'most_likely_to' ? 'Most Likely To' : currentTask.type}
                                 </h3>
 
                                 <p className="text-2xl md:text-3xl font-medium leading-relaxed mb-12">
                                     {currentTask.text}
                                 </p>
 
-                                <div className="flex w-full gap-4 mt-auto">
-                                    <button
-                                        onClick={() => handleOutcome(false)}
-                                        className="flex-1 py-4 rounded-xl border border-zinc-700 text-zinc-400 font-bold hover:bg-zinc-800 transition-colors leading-tight"
-                                    >
-                                        {selectedGame === 'never_have_i_ever' ? "I haven't (Safe)" : "I didn't (0)"}
-                                    </button>
-                                    <button
-                                        onClick={() => handleOutcome(true)}
-                                        className={`flex-1 py-4 rounded-xl font-bold text-white transition-all shadow-lg leading-tight ${selectedGame === 'never_have_i_ever' ? 'bg-red-600 hover:bg-red-500 hover:shadow-[0_0_20px_rgba(220,38,38,0.6)]' : currentTask.type === 'truth'
-                                            ? 'bg-neon-blue hover:bg-neon-blue/80 hover:shadow-[0_0_20px_rgba(6,182,212,0.6)]'
-                                            : 'bg-neon-pink hover:bg-neon-pink/80 hover:shadow-[0_0_20px_rgba(236,72,153,0.6)]'
-                                            }`}
-                                    >
-                                        {selectedGame === 'never_have_i_ever' ? "I have (Drink & -1 ❤️)" : "I did it (+1)"}
-                                    </button>
-                                </div>
+                                {selectedGame === 'most_likely_to' ? (
+                                    <div className="w-full flex flex-col gap-3 mt-auto">
+                                        <p className="text-zinc-400 text-sm uppercase tracking-widest mb-2 font-bold animate-pulse">Count 1, 2, 3... and Vote!</p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {players.map(p => (
+                                                <button
+                                                    key={p.id}
+                                                    onClick={() => handleOutcome(p.id)}
+                                                    className="py-3 px-4 rounded-xl border border-neon-purple/50 bg-zinc-800 text-zinc-300 font-bold hover:bg-neon-purple hover:text-white hover:border-neon-purple transition-all leading-tight shadow-md"
+                                                >
+                                                    {p.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex w-full gap-4 mt-auto">
+                                        <button
+                                            onClick={() => handleOutcome(false)}
+                                            className="flex-1 py-4 rounded-xl border border-zinc-700 text-zinc-400 font-bold hover:bg-zinc-800 transition-colors leading-tight"
+                                        >
+                                            {selectedGame === 'never_have_i_ever' ? "I haven't (Safe)" : "I didn't (0)"}
+                                        </button>
+                                        <button
+                                            onClick={() => handleOutcome(true)}
+                                            className={`flex-1 py-4 rounded-xl font-bold text-white transition-all shadow-lg leading-tight ${selectedGame === 'never_have_i_ever' ? 'bg-red-600 hover:bg-red-500 hover:shadow-[0_0_20px_rgba(220,38,38,0.6)]' : currentTask.type === 'truth'
+                                                ? 'bg-neon-blue hover:bg-neon-blue/80 hover:shadow-[0_0_20px_rgba(6,182,212,0.6)]'
+                                                : 'bg-neon-pink hover:bg-neon-pink/80 hover:shadow-[0_0_20px_rgba(236,72,153,0.6)]'
+                                                }`}
+                                        >
+                                            {selectedGame === 'never_have_i_ever' ? "I have (Drink & -1 ❤️)" : "I did it (+1)"}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
