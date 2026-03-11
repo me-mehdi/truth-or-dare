@@ -98,6 +98,27 @@ const content = {
         { text: "Would you rather accidentally like an old photo of your ex or accidentally text them 'I miss you'?", optionA: "Like an old photo", optionB: "Text 'I miss you'", statsA: 82 },
         { text: "Would you rather always say everything on your mind or never speak again?", optionA: "Say everything", optionB: "Never speak", statsA: 30 },
         { text: "Would you rather be famous when you are alive and forgotten when you die or unknown when you are alive but famous after you die?", optionA: "Famous alive", optionB: "Famous after death", statsA: 45 }
+    ],
+    compatibility_test: [
+        "What is the other person's favorite food?",
+        "Who takes longer to get ready in the morning?",
+        "Where was your first kiss?",
+        "What is the other person's biggest pet peeve?",
+        "Who is more likely to apologize first after an argument?",
+        "What was the first movie you watched together?",
+        "Who is the better cook?",
+        "What is your partner's go-to comfort show?",
+        "Who said 'I love you' first?",
+        "What is your partner's dream vacation destination?"
+    ],
+    light_dares: [
+        "Give your partner a sweet kiss on the cheek.",
+        "Hold hands for the rest of this round.",
+        "Post an unflattering selfie of both of you.",
+        "Give your partner a 30-second back rub.",
+        "Let your partner rewrite your dating app bio or social media bio.",
+        "Do your best impression of your partner.",
+        "Make up a secret handshake in the next 1 minute."
     ]
 };
 
@@ -118,6 +139,8 @@ export default function App() {
 
     // Gameplay State
     const [currentPlayer, setCurrentPlayer] = useState(null);
+    const [currentPair, setCurrentPair] = useState(null); // Used for compatibility test
+    const [stats, setStats] = useState({ compatibilityMatches: 0, compatibilityTurns: 0 }); // Global stats for couples game
     const [turnPhase, setTurnPhase] = useState('reveal'); // reveal, choice, task, stats, outcome
     const [currentTask, setCurrentTask] = useState({ type: null, text: null, item: null });
 
@@ -142,6 +165,7 @@ export default function App() {
         if (players.length === 0) return;
         // reset scores and lives if starting fresh
         setPlayers(players.map(p => ({ ...p, score: 0, lives: 5 })));
+        setStats({ compatibilityMatches: 0, compatibilityTurns: 0 });
         setPhase('gameplay');
         nextTurn();
     };
@@ -160,8 +184,15 @@ export default function App() {
     };
 
     const nextTurn = () => {
-        const randomPlayer = players[Math.floor(Math.random() * players.length)];
-        setCurrentPlayer(randomPlayer);
+        if (selectedGame === 'compatibility_test' && players.length >= 2) {
+            let shuffled = [...players].sort(() => 0.5 - Math.random());
+            setCurrentPair([shuffled[0], shuffled[1]]);
+            setCurrentPlayer(null);
+        } else {
+            const randomPlayer = players[Math.floor(Math.random() * players.length)];
+            setCurrentPlayer(randomPlayer);
+            setCurrentPair(null);
+        }
         setTurnPhase('reveal');
         setCurrentTask({ type: null, text: null, item: null });
     };
@@ -187,10 +218,38 @@ export default function App() {
             const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
             setCurrentTask({ type: 'would_you_rather', text: randomQuestion.text, item: randomQuestion });
             setTurnPhase('task');
+        } else if (selectedGame === 'compatibility_test') {
+            const questions = content.compatibility_test;
+            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            setCurrentTask({ type: 'compatibility_test', text: randomQuestion });
+            setTurnPhase('task');
         }
     };
 
     const handleOutcome = (successOrId) => {
+        if (selectedGame === 'compatibility_test' && currentTask.type === 'compatibility_test') {
+            setStats(s => ({ ...s, compatibilityTurns: s.compatibilityTurns + 1, compatibilityMatches: successOrId === true ? s.compatibilityMatches + 1 : s.compatibilityMatches }));
+
+            if (successOrId === true) {
+                setPlayers(players.map(p =>
+                    (currentPair && (p.id === currentPair[0].id || p.id === currentPair[1].id)) ? { ...p, score: p.score + 1 } : p
+                ));
+                setTurnPhase('outcome');
+                setTimeout(nextTurn, 1000);
+            } else {
+                const rules = content.light_dares;
+                const randomDare = rules[Math.floor(Math.random() * rules.length)];
+                setCurrentTask({ type: 'light_dare', text: randomDare });
+            }
+            return;
+        }
+
+        if (currentTask.type === 'light_dare') {
+            setTurnPhase('outcome');
+            setTimeout(nextTurn, 1000);
+            return;
+        }
+
         if (selectedGame === 'truth_or_dare') {
             if (successOrId) {
                 setPlayers(players.map(p =>
@@ -289,6 +348,13 @@ export default function App() {
                         >
                             <span className="relative z-10 text-amber-500 group-hover:text-glow uppercase tracking-wider">Would You Rather</span>
                         </button>
+
+                        <button
+                            onClick={() => selectGame('compatibility_test')}
+                            className="group relative px-6 py-5 rounded-2xl bg-zinc-900 border border-teal-500 text-white font-bold text-xl hover:bg-teal-500/10 transition-all duration-300 shadow-[0_0_15px_rgba(20,184,166,0.2)] hover:shadow-[0_0_30px_rgba(20,184,166,0.5)] overflow-hidden"
+                        >
+                            <span className="relative z-10 text-teal-500 group-hover:text-glow uppercase tracking-wider">The Compatibility Test</span>
+                        </button>
                     </div>
                 </div>
             )}
@@ -361,14 +427,18 @@ export default function App() {
 
                     <div className="z-10 flex flex-col items-center w-full max-w-md h-[60vh] justify-center relative">
 
-                        {turnPhase === 'reveal' && currentPlayer && (
+                        {turnPhase === 'reveal' && (currentPlayer || currentPair) && (
                             <div className="text-center animate-in zoom-in duration-500">
                                 <p className="text-xl text-zinc-400 mb-2 tracking-widest uppercase">Get ready...</p>
                                 <h2 className="text-5xl font-black text-white mb-2 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                                    It's <span className="text-neon-blue">{currentPlayer.name}'s</span> turn!
+                                    {selectedGame === 'compatibility_test' && currentPair ? (
+                                        <>It's <span className="text-teal-500">{currentPair[0].name}</span> & <span className="text-teal-500">{currentPair[1].name}'s</span> turn!</>
+                                    ) : (
+                                        <>It's <span className="text-neon-blue">{currentPlayer?.name}'s</span> turn!</>
+                                    )}
                                 </h2>
 
-                                {selectedGame === 'never_have_i_ever' && currentPlayer.lives === 0 && (
+                                {selectedGame === 'never_have_i_ever' && currentPlayer?.lives === 0 && (
                                     <p className="text-red-500 font-bold mt-4 uppercase tracking-widest animate-pulse">Eliminated! Drink Every Turn!</p>
                                 )}
 
@@ -404,7 +474,7 @@ export default function App() {
                             </div>
                         )}
 
-                        {turnPhase === 'choice' && selectedGame !== 'truth_or_dare' && selectedGame !== 'never_have_i_ever' && selectedGame !== 'most_likely_to' && (
+                        {turnPhase === 'choice' && selectedGame !== 'truth_or_dare' && selectedGame !== 'never_have_i_ever' && selectedGame !== 'most_likely_to' && selectedGame !== 'compatibility_test' && (
                             <div className="flex flex-col w-full gap-6 animate-in slide-in-from-right duration-500 text-center">
                                 <p className="text-zinc-400 italic mb-4">Content for {selectedGame.replace(/_/g, ' ')} coming soon...</p>
                                 <button
@@ -417,13 +487,13 @@ export default function App() {
                         )}
 
                         {turnPhase === 'task' && (
-                            <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${selectedGame === 'never_have_i_ever' ? 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]' : selectedGame === 'most_likely_to' ? 'border-neon-purple shadow-[0_0_30px_rgba(168,85,247,0.3)]' : selectedGame === 'would_you_rather' ? 'border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]' : currentTask.type === 'truth'
+                            <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${selectedGame === 'never_have_i_ever' ? 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]' : selectedGame === 'most_likely_to' ? 'border-neon-purple shadow-[0_0_30px_rgba(168,85,247,0.3)]' : selectedGame === 'would_you_rather' ? 'border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]' : selectedGame === 'compatibility_test' ? 'border-teal-500 shadow-[0_0_30px_rgba(20,184,166,0.3)]' : currentTask.type === 'truth'
                                 ? 'border-neon-blue shadow-[0_0_30px_rgba(6,182,212,0.3)]'
                                 : 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]'
                                 }`}>
-                                <h3 className={`text-2xl font-bold uppercase tracking-widest mb-6 ${selectedGame === 'never_have_i_ever' ? 'text-neon-pink' : selectedGame === 'most_likely_to' ? 'text-neon-purple' : selectedGame === 'would_you_rather' ? 'text-amber-500' : currentTask.type === 'truth' ? 'text-neon-blue' : 'text-neon-pink'
+                                <h3 className={`text-2xl font-bold uppercase tracking-widest mb-6 ${selectedGame === 'never_have_i_ever' ? 'text-neon-pink' : selectedGame === 'most_likely_to' ? 'text-neon-purple' : selectedGame === 'would_you_rather' ? 'text-amber-500' : selectedGame === 'compatibility_test' ? 'text-teal-500' : currentTask.type === 'truth' ? 'text-neon-blue' : 'text-neon-pink'
                                     }`}>
-                                    {selectedGame === 'never_have_i_ever' ? 'Never Have I Ever' : selectedGame === 'most_likely_to' ? 'Most Likely To' : selectedGame === 'would_you_rather' ? 'Would You Rather' : currentTask.type}
+                                    {selectedGame === 'never_have_i_ever' ? 'Never Have I Ever' : selectedGame === 'most_likely_to' ? 'Most Likely To' : selectedGame === 'would_you_rather' ? 'Would You Rather' : selectedGame === 'compatibility_test' ? (currentTask.type === 'light_dare' ? 'Penalty Dare' : 'Compatibility Test') : currentTask.type}
                                 </h3>
 
                                 <p className="text-2xl md:text-3xl font-medium leading-relaxed mb-12">
@@ -447,6 +517,19 @@ export default function App() {
                                             className="w-full py-6 rounded-xl border border-teal-500/50 text-teal-500 font-bold hover:bg-teal-500 hover:text-white transition-all shadow-md leading-tight text-lg"
                                         >
                                             {currentTask.item?.optionB}
+                                        </button>
+                                    </div>
+                                ) : currentTask.type === 'light_dare' ? (
+                                    <button onClick={() => handleOutcome(true)} className="w-full py-4 rounded-xl border border-teal-500/50 text-teal-500 font-bold hover:bg-teal-500 hover:text-white transition-all shadow-md leading-tight text-lg">
+                                        We Did It!
+                                    </button>
+                                ) : selectedGame === 'compatibility_test' ? (
+                                    <div className="flex flex-col w-full gap-4 mt-auto">
+                                        <button onClick={() => handleOutcome(true)} className="w-full py-4 rounded-xl font-bold bg-teal-500 text-white hover:bg-teal-600 transition-all shadow-md leading-tight text-lg">
+                                            We Matched! (+1 Point)
+                                        </button>
+                                        <button onClick={() => handleOutcome(false)} className="w-full py-4 rounded-xl border border-rose-500/50 text-rose-500 font-bold hover:bg-rose-500 hover:text-white transition-all shadow-md leading-tight text-lg">
+                                            No Match (Light Dare)
                                         </button>
                                     </div>
                                 ) : selectedGame === 'most_likely_to' ? (
@@ -541,6 +624,19 @@ export default function App() {
                     <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple mb-8 filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]">
                         Game Over!
                     </h2>
+
+                    {selectedGame === 'compatibility_test' && players.length === 2 && stats.compatibilityTurns > 0 && (
+                        <div className="w-full bg-zinc-900/50 border border-teal-500/50 rounded-3xl p-6 mb-8 backdrop-blur-sm text-center">
+                            <h3 className="text-xl uppercase tracking-widest text-teal-500 mb-2">Couple Score</h3>
+                            <p className="text-5xl font-black text-white mb-4">
+                                {Math.round((stats.compatibilityMatches / stats.compatibilityTurns) * 100)}%
+                            </p>
+                            <p className="text-zinc-400 italic">
+                                {(stats.compatibilityMatches / stats.compatibilityTurns) >= 0.8 ? "You guys are soulmates!" :
+                                    (stats.compatibilityMatches / stats.compatibilityTurns) >= 0.5 ? "A solid connection!" : "You might need to communicate more..."}
+                            </p>
+                        </div>
+                    )}
 
                     <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-3xl p-6 mb-8 backdrop-blur-sm">
                         <h3 className="text-xl uppercase tracking-widest text-zinc-400 text-center mb-6">
