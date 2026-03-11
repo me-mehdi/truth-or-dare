@@ -1,128 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// --- CONTENT ---
-const content = {
-    truths: [
-        "What is your most embarrassing memory?",
-        "Who was your first crush?",
-        "Have you ever lied to get out of trouble?",
-        "What is the most childish thing you still do?",
-        "What is a secret you have never told anyone?",
-        "What was your first impression of me?",
-        "What is a secret fantasy you haven't shared with me yet?",
-        "What is your biggest relationship fear?",
-        "Describe your perfect romantic evening.",
-        "What is a secret you've kept from past partners?",
-        "What was the very first thing you noticed about me when we met?",
-        "What is your biggest 'green flag' in a partner?",
-        "What is the most spontaneous thing you’ve ever done on a date?",
-        "What is your favorite physical feature on yourself?",
-        "What’s the most romantic thing someone has ever done for you?",
-        "What’s the best compliment you’ve ever received?",
-        "What was your most awkward dating experience?",
-        "Do you believe in chemistry at first sight?",
-        "What’s the most adventurous thing you’ve ever did?",
-        "What was your first impression of me?",
-        "What is a secret fantasy you haven't shared with me yet?",
-        "What is your biggest relationship fear?",
-        "Describe your perfect romantic evening.",
-        "What is a secret you've kept from past partners?",
-        "What part of my body were you most excited to see in person tonight?",
-        "If we had sex tonight and it was terrible, would you tell me the truth or just ghost me?",
-        "What’s the kinkiest thing you’ve ever done with someone you met online?",
-        "Have you been talking to or going on dates with anyone else since we started talking?",
-        "Do you have any exes I should actually be worried about? What would they say about us?",
-        "If I had a secret fetish, what do you *hope* it is, and what do you *fear* it is?",
-        "What is the likelihood (0-100%) of us sleeping together after this game ends?",
-        "Would you rather kiss me right now or leave and block me forever?",
-        "What was your biggest fear about meeting me in real life?",
-        "Have you ever slept with someone else while we were in the 'talking' phase?",
-        "What was the darkest/weirdest assumption you made about me before we became friends?",
-        "What is something I’ve said or done recently that actually worried you?",
-        "Who in this room would you survive with the longest in a disaster, and who would you sacrifice first?",
-        "If I had a secret that could ruin my reputation, would you keep it or tell your closest person?",
-        "What is one thing you noticed about me the moment we met that you’re still trying to process?",
-        "Have you ever lied to me about why you couldn't hang out?",
-        "Would you be okay with dating someone for 2 years without being intimate?",
-        "What's the most 'online' or 'weird' thing you've ever caught me doing?"
-    ],
-    dares: [
-        "Sing the chorus of your favorite song loudly.",
-        "Speak in an accent for the next 3 rounds.",
-        "Give me a 1-minute massage.",
-        "Perform a sensual dance for 1 minute.",
-        "Let me do a blindfolded taste test on you.",
-        "Whisper a secret seductively in my ear.",
-        "Kiss your favorite spot on my body.",
-        "Show the most emberising photo in your gallery and tell me the story behind it.",
-        "Let’s take a selfie together right now.",
-        "Let me check the last thing you searched for on Google.",
-        "Give me a 1-minute massage.",
-        "Perform a sensual dance for 1 minute.",
-        "Let me do a blindfolded taste test on you.",
-        "Whisper a secret seductively in my ear.",
-        "Kiss your favorite spot on my body."
-    ],
-    never_have_i_ever: [
-        "Never have I ever lied to a partner.",
-        "Never have I ever ghosted someone after a first date.",
-        "Never have I ever snooped through my partner's phone.",
-        "Never have I ever kissed someone in this room.",
-        "Never have I ever sent a risky text to the wrong person.",
-        "Never have I ever faked being sick to get out of a date.",
-        "Never have I ever stayed friends with an ex.",
-        "Never have I ever crushed on a friend's partner.",
-        "Never have I ever used a dating app while in a relationship.",
-        "Never have I ever flirted my way out of a ticket or a problem."
-    ],
-    most_likely_to: [
-        "Most likely to end up in jail for something stupid.",
-        "Most likely to forget their own anniversary.",
-        "Most likely to become a millionaire and lose it all in a week.",
-        "Most likely to survive a zombie apocalypse.",
-        "Most likely to dramatically trip in public and pretend it was a dance move.",
-        "Most likely to talk their way out of a speeding ticket.",
-        "Most likely to secretly be a spy.",
-        "Most likely to spend all their money on a ridiculous impulse buy.",
-        "Most likely to randomly disappear and move to a new country.",
-        "Most likely to start a cult by accident."
-    ],
-    would_you_rather: [
-        { text: "Would you rather always have to sing instead of speaking or always have to dance instead of walking?", optionA: "Sing instead of speaking", optionB: "Dance instead of walking", statsA: 34 },
-        { text: "Would you rather only be able to kiss for the rest of your life or only be able to hug?", optionA: "Only kiss", optionB: "Only hug", statsA: 68 },
-        { text: "Would you rather know how you die or when you die?", optionA: "How you die", optionB: "When you die", statsA: 42 },
-        { text: "Would you rather constantly itch or constantly be in pain?", optionA: "Constantly itch", optionB: "Constantly be in pain", statsA: 20 },
-        { text: "Would you rather find true love today or win the lottery next year?", optionA: "True love today", optionB: "Lottery next year", statsA: 55 },
-        { text: "Would you rather have a rewind button or a pause button on your life?", optionA: "Rewind button", optionB: "Pause button", statsA: 78 },
-        { text: "Would you rather never use the internet again or never go outside again?", optionA: "No internet", optionB: "No outside", statsA: 15 },
-        { text: "Would you rather accidentally like an old photo of your ex or accidentally text them 'I miss you'?", optionA: "Like an old photo", optionB: "Text 'I miss you'", statsA: 82 },
-        { text: "Would you rather always say everything on your mind or never speak again?", optionA: "Say everything", optionB: "Never speak", statsA: 30 },
-        { text: "Would you rather be famous when you are alive and forgotten when you die or unknown when you are alive but famous after you die?", optionA: "Famous alive", optionB: "Famous after death", statsA: 45 }
-    ],
-    compatibility_test: [
-        "What is the other person's favorite food?",
-        "Who takes longer to get ready in the morning?",
-        "Where was your first kiss?",
-        "What is the other person's biggest pet peeve?",
-        "Who is more likely to apologize first after an argument?",
-        "What was the first movie you watched together?",
-        "Who is the better cook?",
-        "What is your partner's go-to comfort show?",
-        "Who said 'I love you' first?",
-        "What is your partner's dream vacation destination?"
-    ],
-    light_dares: [
-        "Give your partner a sweet kiss on the cheek.",
-        "Hold hands for the rest of this round.",
-        "Post an unflattering selfie of both of you.",
-        "Give your partner a 30-second back rub.",
-        "Let your partner rewrite your dating app bio or social media bio.",
-        "Do your best impression of your partner.",
-        "Make up a secret handshake in the next 1 minute."
-    ]
-};
-
-// --- ICONS (lucide-react stand-ins using simple SVG) ---
+// --- NO STATIC CONTENT (100% AI DRIVEN) ---// --- ICONS (lucide-react stand-ins using simple SVG) ---
 const TrashIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
@@ -162,16 +40,18 @@ export default function App() {
         }
 
         // Determine Prompt
-        let promptText = "You are a professional game designer for a Truth or Dare app. Your job is to generate ONE unique, engaging question. Return ONLY the text of the question.";
+        let promptText = "You are a professional game designer and relationship expert creating an edgy, seductive 18+ party game exclusively for adult couples. Your job is to generate ONE unique, highly engaging question. The tone must be intensely romantic, highly provocative, or playfully kink-oriented designed to build extreme tension between partners. Return ONLY the text of the question with NO quotes, NO conversational filler, and NO emojis.";
         if (gameMode === 'truth_or_dare') {
-            if (subType === 'truth') promptText += " Create a 'Truth' question. Avoid clichés. Make it modern and slightly provocative.";
-            if (subType === 'dare') promptText += " Create a 'Dare'. It should be actionable in a living room, funny, and engaging.";
+            if (subType === 'truth') promptText += " Create a deep, intimate, and sexually provocative 'Truth' question to uncover raw desires or past secrets.";
+            if (subType === 'dare') promptText += " Create an extremely sensual, physically intimate, or highly seductive 18+ 'Dare' that tests their boundaries in the bedroom or living room.";
         } else if (gameMode === 'never_have_i_ever') {
-            promptText += " Create a 'Never have I ever' statement. It should be relatable but slightly scandalous or embarrassing.";
+            promptText += " Create an extremely scandalous, naughty, or taboo 18+ 'Never have I ever' statement about sexual boundaries or intimate experiences.";
         } else if (gameMode === 'most_likely_to') {
-            promptText += " Create a 'Most likely to' prompt. Make it funny, specific, and starting with 'Most likely to'.";
+            promptText += " Create a seductive or highly explicit 'Most likely to' prompt about dirty habits or bedroom behavior. Start with 'Most likely to'.";
         } else if (gameMode === 'compatibility_test') {
-            promptText += " Create a question for couples to test how well they know each other. For example: 'What is the other person's favorite food?'";
+            promptText += " Create a deep, highly intimate relationship question for couples to test how well they know each other's deepest desires or dark secrets. For example: 'What is my ultimate hidden fantasy?'";
+        } else if (gameMode === 'light_dare') {
+            promptText += " Create a slightly spicy, romantic penalty dare. Like 'Give me a sensual neck massage for 1 minute' or 'Kiss my inner thigh'.";
         }
 
         try {
@@ -190,14 +70,42 @@ export default function App() {
             console.error("AI fetch failed, falling back to local DB", e);
         }
 
-        // Fallback to local DB if API fails
-        let fallbackQs = [];
-        if (gameMode === 'truth_or_dare') fallbackQs = content[`${subType}s`];
-        else if (gameMode === 'would_you_rather') return null; // handled separately
-        else fallbackQs = content[gameMode];
-
-        return fallbackQs[Math.floor(Math.random() * fallbackQs.length)];
+        // Fallback to error message if API fails
+        if (gameMode === 'would_you_rather') return null; // handled separately
+        return "Uh oh, the AI got too hot to handle! (API Limit Reached - Please wait a moment or refresh)";
     };
+
+    // Would You Rather AI Gen handles JSON formatting separately
+    const fetchWouldYouRather = async () => {
+        const cacheKey = `ai_cache_would_you_rather`;
+        let cached = [];
+        try { cached = JSON.parse(localStorage.getItem(cacheKey)) || []; } catch (e) { }
+
+        if (cached.length > 0) {
+            const item = cached.pop();
+            localStorage.setItem(cacheKey, JSON.stringify(cached));
+            return item;
+        }
+
+        const promptText = `You are a professional game designer creating an edgy, seductive 18+ party game exclusively for adult couples. Create ONE unique, highly provocative, sexually charged 'Would You Rather' dilemma. 
+You MUST return the output as a raw JSON string matching exactly this schema and nothing else (no markdown blocks, no conversational filler):
+{ "text": "Would you rather [Intimate Choice A] or [Intimate Choice B]?", "optionA": "[Short Choice A]", "optionB": "[Short Choice B]", "statsA": [Random number 1-99 representing popularity percent] }`;
+
+        try {
+            const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCUAnN0lnDsOU-VB9Tnj3ywsFRpmyfzDlk", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+            });
+            const data = await response.json();
+            if (data.candidates && data.candidates.length > 0) {
+                const textOutput = data.candidates[0].content.parts[0].text.trim().replace(/```json|```/g, '');
+                return JSON.parse(textOutput);
+            }
+        } catch (e) { console.error("WYR fetch failed", e); }
+
+        return { text: "API Error: Would you rather wait a minute or refresh the page?", optionA: "Wait", optionB: "Refresh", statsA: 50 };
+    }
     const selectGame = (gameType) => {
         setSelectedGame(gameType);
         setPhase('players');
@@ -267,10 +175,7 @@ export default function App() {
             setCurrentTask({ type: 'most_likely_to', text: randomQuestion });
             setTurnPhase('task');
         } else if (selectedGame === 'would_you_rather') {
-            // Keep Would You Rather local because of the custom object/stats format
-            const questions = content.would_you_rather;
-            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-            setCurrentTask({ type: 'would_you_rather', text: randomQuestion.text, item: randomQuestion });
+            // Deprecated path: `initWYRTurn` handles this now via Next Turn button bypassing choice menu entirely
             setTurnPhase('task');
         } else if (selectedGame === 'compatibility_test') {
             setTurnPhase('loading');
@@ -280,7 +185,7 @@ export default function App() {
         }
     };
 
-    const handleOutcome = (successOrId) => {
+    const handleOutcome = async (successOrId) => {
         if (selectedGame === 'compatibility_test' && currentTask.type === 'compatibility_test') {
             setStats(s => ({ ...s, compatibilityTurns: s.compatibilityTurns + 1, compatibilityMatches: successOrId === true ? s.compatibilityMatches + 1 : s.compatibilityMatches }));
 
@@ -291,9 +196,10 @@ export default function App() {
                 setTurnPhase('outcome');
                 setTimeout(nextTurn, 1000);
             } else {
-                const rules = content.light_dares;
-                const randomDare = rules[Math.floor(Math.random() * rules.length)];
+                setTurnPhase('loading');
+                const randomDare = await fetchAIQuestion('light_dare');
                 setCurrentTask({ type: 'light_dare', text: randomDare });
+                setTurnPhase('task');
             }
             return;
         }
@@ -330,6 +236,19 @@ export default function App() {
         setTurnPhase('outcome'); // Briefly show outcome? Or just go next. Let's just go next in a moment
         setTimeout(nextTurn, 1000); // 1 second delay before next turn
     };
+
+    const handleChoiceWYR = async () => {
+        setTurnPhase('loading');
+        const randomItem = await fetchWouldYouRather();
+        if (randomItem) {
+            setCurrentTask({ type: 'would_you_rather', text: randomItem.text, item: randomItem });
+        }
+        setTurnPhase('task');
+    };
+
+    const initWYRTurn = () => {
+        handleChoiceWYR();
+    }
 
     // --- RENDERERS ---
     const renderScoreboard = () => (
@@ -502,6 +421,7 @@ export default function App() {
                                 <button
                                     onClick={() => {
                                         if (selectedGame === 'truth_or_dare') setTurnPhase('choice');
+                                        else if (selectedGame === 'would_you_rather') initWYRTurn();
                                         else handleChoice(selectedGame);
                                     }}
                                     className="mt-8 px-8 py-3 rounded-full border border-zinc-700 hover:bg-zinc-800 transition-colors"
