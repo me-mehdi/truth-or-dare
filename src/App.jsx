@@ -75,7 +75,8 @@ const TrashIcon = () => (
 
 export default function App() {
     // --- STATE ---
-    const [phase, setPhase] = useState('players'); // players, gameplay
+    const [phase, setPhase] = useState('landing'); // landing, players, gameplay, endgame
+    const [selectedGame, setSelectedGame] = useState(null);
 
     const [players, setPlayers] = useState([]); // [{ id, name, score }]
     const [newPlayerName, setNewPlayerName] = useState('');
@@ -86,6 +87,11 @@ export default function App() {
     const [currentTask, setCurrentTask] = useState({ type: null, text: null });
 
     // --- HANDLERS ---
+    const selectGame = (gameType) => {
+        setSelectedGame(gameType);
+        setPhase('players');
+    };
+
     const addPlayer = (e) => {
         e.preventDefault();
         if (!newPlayerName.trim()) return;
@@ -111,6 +117,11 @@ export default function App() {
 
     const resetGame = () => {
         setPhase('players');
+    };
+
+    const backToMenu = () => {
+        setPhase('landing');
+        setSelectedGame(null);
     };
 
     const nextTurn = () => {
@@ -170,6 +181,44 @@ export default function App() {
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-neon-purple/20 rounded-full blur-[100px] pointer-events-none"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neon-blue/20 rounded-full blur-[100px] pointer-events-none"></div>
 
+            {phase === 'landing' && (
+                <div className="z-10 flex flex-col items-center animate-in fade-in zoom-in duration-500 w-full max-w-sm">
+                    <h1 className="text-5xl md:text-6xl font-black mb-12 text-center text-transparent bg-clip-text bg-gradient-to-br from-neon-pink via-neon-purple to-neon-blue filter drop-shadow-[0_0_20px_rgba(168,85,247,0.5)] leading-tight tracking-tight">
+                        PARTY <br /> GAMES
+                    </h1>
+
+                    <div className="flex flex-col w-full gap-4">
+                        <button
+                            onClick={() => selectGame('truth_or_dare')}
+                            className="group relative px-6 py-5 rounded-2xl bg-zinc-900 border border-neon-blue text-white font-bold text-xl hover:bg-neon-blue/10 transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] overflow-hidden"
+                        >
+                            <span className="relative z-10 text-neon-blue group-hover:text-glow uppercase tracking-wider">Truth or Dare</span>
+                        </button>
+
+                        <button
+                            onClick={() => selectGame('never_have_i_ever')}
+                            className="group relative px-6 py-5 rounded-2xl bg-zinc-900 border border-neon-pink text-white font-bold text-xl hover:bg-neon-pink/10 transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.2)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] overflow-hidden"
+                        >
+                            <span className="relative z-10 text-neon-pink group-hover:text-glow uppercase tracking-wider">Never Have I Ever</span>
+                        </button>
+
+                        <button
+                            onClick={() => selectGame('most_likely_to')}
+                            className="group relative px-6 py-5 rounded-2xl bg-zinc-900 border border-neon-purple text-white font-bold text-xl hover:bg-neon-purple/10 transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] overflow-hidden"
+                        >
+                            <span className="relative z-10 text-neon-purple group-hover:text-glow uppercase tracking-wider">Most Likely To</span>
+                        </button>
+
+                        <button
+                            onClick={() => selectGame('would_you_rather')}
+                            className="group relative px-6 py-5 rounded-2xl bg-zinc-900 border border-amber-500 text-white font-bold text-xl hover:bg-amber-500/10 transition-all duration-300 shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] overflow-hidden"
+                        >
+                            <span className="relative z-10 text-amber-500 group-hover:text-glow uppercase tracking-wider">Would You Rather</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {phase === 'players' && (
                 <div className="z-10 flex flex-col items-center w-full max-w-md animate-in slide-in-from-bottom duration-500">
                     <h2 className="text-3xl font-bold mb-6 text-neon-purple drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] uppercase tracking-wider">
@@ -213,12 +262,19 @@ export default function App() {
                     <button
                         onClick={startGame}
                         disabled={players.length === 0}
-                        className={`w-full py-4 rounded-xl font-bold text-xl uppercase tracking-wider transition-all duration-300 ${players.length > 0
+                        className={`w-full py-4 rounded-xl font-bold text-xl uppercase tracking-wider transition-all duration-300 mb-4 ${players.length > 0
                             ? 'bg-gradient-to-r from-neon-purple to-neon-blue text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-[1.02]'
                             : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
                             }`}
                     >
                         Start Game
+                    </button>
+
+                    <button
+                        onClick={backToMenu}
+                        className="text-zinc-500 hover:text-zinc-300 transition-colors underline text-sm"
+                    >
+                        Back to Menu
                     </button>
                 </div>
             )}
@@ -245,7 +301,7 @@ export default function App() {
                             </div>
                         )}
 
-                        {turnPhase === 'choice' && (
+                        {turnPhase === 'choice' && selectedGame === 'truth_or_dare' && (
                             <div className="flex flex-col w-full gap-6 animate-in slide-in-from-right duration-500">
                                 <button
                                     onClick={() => handleChoice('truth')}
@@ -258,6 +314,18 @@ export default function App() {
                                     className="w-full py-12 rounded-3xl bg-zinc-900 border-2 border-neon-pink flex items-center justify-center hover:bg-neon-pink/5 transition-all shadow-[0_0_20px_rgba(236,72,153,0.2)] hover:shadow-[0_0_40px_rgba(236,72,153,0.5)] hover:scale-[1.02] group"
                                 >
                                     <span className="text-4xl font-black text-neon-pink tracking-widest uppercase group-hover:text-glow">DARE</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {turnPhase === 'choice' && selectedGame !== 'truth_or_dare' && (
+                            <div className="flex flex-col w-full gap-6 animate-in slide-in-from-right duration-500 text-center">
+                                <p className="text-zinc-400 italic mb-4">Content for {selectedGame.replace(/_/g, ' ')} coming soon...</p>
+                                <button
+                                    onClick={() => handleOutcome(true)}
+                                    className="w-full py-6 rounded-3xl bg-zinc-900 border-2 border-zinc-700 flex items-center justify-center hover:bg-zinc-800 transition-all font-bold text-zinc-300"
+                                >
+                                    Skip Turn
                                 </button>
                             </div>
                         )}
@@ -331,9 +399,16 @@ export default function App() {
 
                     <button
                         onClick={resetGame}
-                        className="w-full py-4 rounded-xl font-bold text-xl uppercase tracking-wider transition-all duration-300 bg-gradient-to-r from-neon-pink to-neon-purple text-white shadow-[0_0_20px_rgba(236,72,153,0.5)] hover:shadow-[0_0_30px_rgba(236,72,153,0.8)] hover:scale-[1.02]"
+                        className="w-full py-4 rounded-xl font-bold text-xl uppercase tracking-wider transition-all duration-300 bg-gradient-to-r from-neon-pink to-neon-purple text-white shadow-[0_0_20px_rgba(236,72,153,0.5)] hover:shadow-[0_0_30px_rgba(236,72,153,0.8)] hover:scale-[1.02] mb-4"
                     >
                         Play Again
+                    </button>
+
+                    <button
+                        onClick={backToMenu}
+                        className="text-zinc-500 hover:text-zinc-300 transition-colors underline text-sm"
+                    >
+                        Back to Menu
                     </button>
                 </div>
             )}
