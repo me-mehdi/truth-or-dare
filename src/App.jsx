@@ -141,10 +141,63 @@ export default function App() {
     const [currentPlayer, setCurrentPlayer] = useState(null);
     const [currentPair, setCurrentPair] = useState(null); // Used for compatibility test
     const [stats, setStats] = useState({ compatibilityMatches: 0, compatibilityTurns: 0 }); // Global stats for couples game
-    const [turnPhase, setTurnPhase] = useState('reveal'); // reveal, choice, task, stats, outcome
+    const [turnPhase, setTurnPhase] = useState('reveal'); // reveal, loading, choice, task, stats, outcome
     const [currentTask, setCurrentTask] = useState({ type: null, text: null, item: null });
 
     // --- HANDLERS ---
+
+    // AI Integration
+    const fetchAIQuestion = async (gameMode, subType) => {
+        const cacheKey = `ai_cache_${gameMode}_${subType || 'default'}`;
+        let cached = [];
+        try {
+            cached = JSON.parse(localStorage.getItem(cacheKey)) || [];
+        } catch (e) { console.error("Cache read error", e); }
+
+        if (cached.length > 0) {
+            // Use cached question, then remove it
+            const question = cached.pop();
+            localStorage.setItem(cacheKey, JSON.stringify(cached));
+            return question;
+        }
+
+        // Determine Prompt
+        let promptText = "You are a professional game designer for a Truth or Dare app. Your job is to generate ONE unique, engaging question. Return ONLY the text of the question.";
+        if (gameMode === 'truth_or_dare') {
+            if (subType === 'truth') promptText += " Create a 'Truth' question. Avoid clichés. Make it modern and slightly provocative.";
+            if (subType === 'dare') promptText += " Create a 'Dare'. It should be actionable in a living room, funny, and engaging.";
+        } else if (gameMode === 'never_have_i_ever') {
+            promptText += " Create a 'Never have I ever' statement. It should be relatable but slightly scandalous or embarrassing.";
+        } else if (gameMode === 'most_likely_to') {
+            promptText += " Create a 'Most likely to' prompt. Make it funny, specific, and starting with 'Most likely to'.";
+        } else if (gameMode === 'compatibility_test') {
+            promptText += " Create a question for couples to test how well they know each other. For example: 'What is the other person's favorite food?'";
+        }
+
+        try {
+            const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCUAnN0lnDsOU-VB9Tnj3ywsFRpmyfzDlk", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: promptText }] }]
+                })
+            });
+            const data = await response.json();
+            if (data.candidates && data.candidates.length > 0) {
+                return data.candidates[0].content.parts[0].text.trim();
+            }
+        } catch (e) {
+            console.error("AI fetch failed, falling back to local DB", e);
+        }
+
+        // Fallback to local DB if API fails
+        let fallbackQs = [];
+        if (gameMode === 'truth_or_dare') fallbackQs = content[`${subType}s`];
+        else if (gameMode === 'would_you_rather') return null; // handled separately
+        else fallbackQs = content[gameMode];
+
+        return fallbackQs[Math.floor(Math.random() * fallbackQs.length)];
+    };
     const selectGame = (gameType) => {
         setSelectedGame(gameType);
         setPhase('players');
@@ -197,30 +250,31 @@ export default function App() {
         setCurrentTask({ type: null, text: null, item: null });
     };
 
-    const handleChoice = (type) => {
+    const handleChoice = async (type) => {
         if (selectedGame === 'truth_or_dare') {
-            const questions = content[type === 'truth' ? 'truths' : 'dares'];
-            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            setTurnPhase('loading');
+            const randomQuestion = await fetchAIQuestion('truth_or_dare', type);
             setCurrentTask({ type, text: randomQuestion });
             setTurnPhase('task');
         } else if (selectedGame === 'never_have_i_ever') {
-            const questions = content.never_have_i_ever;
-            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            setTurnPhase('loading');
+            const randomQuestion = await fetchAIQuestion('never_have_i_ever');
             setCurrentTask({ type: 'never_have_i_ever', text: randomQuestion });
             setTurnPhase('task');
         } else if (selectedGame === 'most_likely_to') {
-            const questions = content.most_likely_to;
-            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            setTurnPhase('loading');
+            const randomQuestion = await fetchAIQuestion('most_likely_to');
             setCurrentTask({ type: 'most_likely_to', text: randomQuestion });
             setTurnPhase('task');
         } else if (selectedGame === 'would_you_rather') {
+            // Keep Would You Rather local because of the custom object/stats format
             const questions = content.would_you_rather;
             const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
             setCurrentTask({ type: 'would_you_rather', text: randomQuestion.text, item: randomQuestion });
             setTurnPhase('task');
         } else if (selectedGame === 'compatibility_test') {
-            const questions = content.compatibility_test;
-            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            setTurnPhase('loading');
+            const randomQuestion = await fetchAIQuestion('compatibility_test');
             setCurrentTask({ type: 'compatibility_test', text: randomQuestion });
             setTurnPhase('task');
         }
@@ -474,7 +528,7 @@ export default function App() {
                             </div>
                         )}
 
-                        {turnPhase === 'choice' && selectedGame !== 'truth_or_dare' && selectedGame !== 'never_have_i_ever' && selectedGame !== 'most_likely_to' && selectedGame !== 'compatibility_test' && (
+                        {turnPhase === 'choice' && selectedGame !== 'truth_or_dare' && selectedGame !== 'never_have_i_ever' && selectedGame !== 'most_likely_to' && selectedGame !== 'compatibility_test' && selectedGame !== 'would_you_rather' && (
                             <div className="flex flex-col w-full gap-6 animate-in slide-in-from-right duration-500 text-center">
                                 <p className="text-zinc-400 italic mb-4">Content for {selectedGame.replace(/_/g, ' ')} coming soon...</p>
                                 <button
@@ -483,6 +537,15 @@ export default function App() {
                                 >
                                     Skip Turn
                                 </button>
+                            </div>
+                        )}
+
+                        {turnPhase === 'loading' && (
+                            <div className="text-center flex flex-col items-center justify-center animate-pulse">
+                                <div className="w-16 h-16 border-4 border-neon-purple border-t-transparent rounded-full animate-spin mb-6"></div>
+                                <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple tracking-widest uppercase">
+                                    The AI is thinking...
+                                </h2>
                             </div>
                         )}
 
