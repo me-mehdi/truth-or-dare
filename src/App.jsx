@@ -56,13 +56,24 @@ const content = {
         "Kiss your favorite spot on my body.",
         "Show the most emberising photo in your gallery and tell me the story behind it.",
         "Let’s take a selfie together right now.",
-        "Hold my hand for the next 2 minutes while we keep talking.",
         "Let me check the last thing you searched for on Google.",
         "Give me a 1-minute massage.",
         "Perform a sensual dance for 1 minute.",
         "Let me do a blindfolded taste test on you.",
         "Whisper a secret seductively in my ear.",
         "Kiss your favorite spot on my body."
+    ],
+    never_have_i_ever: [
+        "Never have I ever lied to a partner.",
+        "Never have I ever ghosted someone after a first date.",
+        "Never have I ever snooped through my partner's phone.",
+        "Never have I ever kissed someone in this room.",
+        "Never have I ever sent a risky text to the wrong person.",
+        "Never have I ever faked being sick to get out of a date.",
+        "Never have I ever stayed friends with an ex.",
+        "Never have I ever crushed on a friend's partner.",
+        "Never have I ever used a dating app while in a relationship.",
+        "Never have I ever flirted my way out of a ticket or a problem."
     ]
 };
 
@@ -95,7 +106,7 @@ export default function App() {
     const addPlayer = (e) => {
         e.preventDefault();
         if (!newPlayerName.trim()) return;
-        setPlayers([...players, { id: Date.now(), name: newPlayerName.trim(), score: 0 }]);
+        setPlayers([...players, { id: Date.now(), name: newPlayerName.trim(), score: 0, lives: 5 }]);
         setNewPlayerName('');
     };
 
@@ -105,8 +116,8 @@ export default function App() {
 
     const startGame = () => {
         if (players.length === 0) return;
-        // reset scores if starting fresh
-        setPlayers(players.map(p => ({ ...p, score: 0 })));
+        // reset scores and lives if starting fresh
+        setPlayers(players.map(p => ({ ...p, score: 0, lives: 5 })));
         setPhase('gameplay');
         nextTurn();
     };
@@ -132,18 +143,34 @@ export default function App() {
     };
 
     const handleChoice = (type) => {
-        const questions = content[type === 'truth' ? 'truths' : 'dares'];
-        const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-        setCurrentTask({ type, text: randomQuestion });
-        setTurnPhase('task');
+        if (selectedGame === 'truth_or_dare') {
+            const questions = content[type === 'truth' ? 'truths' : 'dares'];
+            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            setCurrentTask({ type, text: randomQuestion });
+            setTurnPhase('task');
+        } else if (selectedGame === 'never_have_i_ever') {
+            const questions = content.never_have_i_ever;
+            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            setCurrentTask({ type: 'never_have_i_ever', text: randomQuestion });
+            setTurnPhase('task');
+        }
     };
 
     const handleOutcome = (success) => {
-        if (success) {
-            setPlayers(players.map(p =>
-                p.id === currentPlayer.id ? { ...p, score: p.score + 1 } : p
-            ));
+        if (selectedGame === 'truth_or_dare') {
+            if (success) {
+                setPlayers(players.map(p =>
+                    p.id === currentPlayer.id ? { ...p, score: p.score + 1 } : p
+                ));
+            }
+        } else if (selectedGame === 'never_have_i_ever') {
+            if (success) { // "I have done it" = loses life
+                setPlayers(players.map(p =>
+                    p.id === currentPlayer.id ? { ...p, lives: Math.max(0, p.lives - 1) } : p
+                ));
+            }
         }
+
         setTurnPhase('outcome'); // Briefly show outcome? Or just go next. Let's just go next in a moment
         setTimeout(nextTurn, 1000); // 1 second delay before next turn
     };
@@ -152,12 +179,16 @@ export default function App() {
     const renderScoreboard = () => (
         <div className="absolute top-4 right-4 flex flex-col items-end gap-3 z-50">
             <div className="bg-zinc-900/80 backdrop-blur-md p-3 rounded-xl border border-neon-purple/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] min-w-[120px]">
-                <h3 className="text-xs uppercase tracking-wider text-neon-pink font-bold mb-2">Scores</h3>
+                <h3 className="text-xs uppercase tracking-wider text-neon-pink font-bold mb-2">
+                    {selectedGame === 'never_have_i_ever' ? 'Lives' : 'Scores'}
+                </h3>
                 <div className="space-y-1">
-                    {players.sort((a, b) => b.score - a.score).map(p => (
+                    {players.sort((a, b) => selectedGame === 'never_have_i_ever' ? b.lives - a.lives : b.score - a.score).map(p => (
                         <div key={p.id} className="flex justify-between items-center text-sm gap-4">
-                            <span className="truncate max-w-[80px] text-gray-300">{p.name}</span>
-                            <span className="font-mono text-neon-blue font-bold">{p.score}</span>
+                            <span className={`truncate max-w-[80px] ${selectedGame === 'never_have_i_ever' && p.lives === 0 ? 'text-zinc-600 line-through' : 'text-gray-300'}`}>{p.name}</span>
+                            <span className={`font-mono font-bold ${selectedGame === 'never_have_i_ever' ? (p.lives > 2 ? 'text-green-400' : p.lives > 0 ? 'text-amber-400' : 'text-red-600') : 'text-neon-blue'}`}>
+                                {selectedGame === 'never_have_i_ever' ? "❤️".repeat(p.lives) || "💀" : p.score}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -247,7 +278,9 @@ export default function App() {
                         ) : (
                             players.map(p => (
                                 <div key={p.id} className="flex justify-between items-center bg-zinc-900/50 border border-zinc-800 rounded-lg p-3 group hover:border-zinc-700 transition-colors">
-                                    <span className="text-lg font-medium">{p.name}</span>
+                                    <span className="text-lg font-medium">
+                                        {p.name} {selectedGame === 'never_have_i_ever' && <span className="text-sm text-zinc-500 ml-2">(5 ❤️)</span>}
+                                    </span>
                                     <button
                                         onClick={() => removePlayer(p.id)}
                                         className="text-zinc-500 hover:text-neon-pink transition-colors p-2"
@@ -291,9 +324,19 @@ export default function App() {
                                 <h2 className="text-5xl font-black text-white mb-2 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                                     It's <span className="text-neon-blue">{currentPlayer.name}'s</span> turn!
                                 </h2>
-                                <p className="text-zinc-500 mt-8">Tap to choose your fate</p>
+
+                                {selectedGame === 'never_have_i_ever' && currentPlayer.lives === 0 && (
+                                    <p className="text-red-500 font-bold mt-4 uppercase tracking-widest animate-pulse">Eliminated! Drink Every Turn!</p>
+                                )}
+
+                                <p className="text-zinc-500 mt-8">
+                                    {selectedGame === 'truth_or_dare' ? 'Tap to choose your fate' : 'Tap to reveal statement'}
+                                </p>
                                 <button
-                                    onClick={() => setTurnPhase('choice')}
+                                    onClick={() => {
+                                        if (selectedGame === 'truth_or_dare') setTurnPhase('choice');
+                                        else handleChoice('never_have_i_ever'); // Skip choice phase for this game mode
+                                    }}
                                     className="mt-8 px-8 py-3 rounded-full border border-zinc-700 hover:bg-zinc-800 transition-colors"
                                 >
                                     Continue
@@ -318,11 +361,11 @@ export default function App() {
                             </div>
                         )}
 
-                        {turnPhase === 'choice' && selectedGame !== 'truth_or_dare' && (
+                        {turnPhase === 'choice' && selectedGame !== 'truth_or_dare' && selectedGame !== 'never_have_i_ever' && (
                             <div className="flex flex-col w-full gap-6 animate-in slide-in-from-right duration-500 text-center">
                                 <p className="text-zinc-400 italic mb-4">Content for {selectedGame.replace(/_/g, ' ')} coming soon...</p>
                                 <button
-                                    onClick={() => handleOutcome(true)}
+                                    onClick={() => handleOutcome(false)}
                                     className="w-full py-6 rounded-3xl bg-zinc-900 border-2 border-zinc-700 flex items-center justify-center hover:bg-zinc-800 transition-all font-bold text-zinc-300"
                                 >
                                     Skip Turn
@@ -331,13 +374,13 @@ export default function App() {
                         )}
 
                         {turnPhase === 'task' && (
-                            <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${currentTask.type === 'truth'
+                            <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${selectedGame === 'never_have_i_ever' ? 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]' : currentTask.type === 'truth'
                                 ? 'border-neon-blue shadow-[0_0_30px_rgba(6,182,212,0.3)]'
                                 : 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]'
                                 }`}>
-                                <h3 className={`text-2xl font-bold uppercase tracking-widest mb-6 ${currentTask.type === 'truth' ? 'text-neon-blue' : 'text-neon-pink'
+                                <h3 className={`text-2xl font-bold uppercase tracking-widest mb-6 ${selectedGame === 'never_have_i_ever' ? 'text-neon-pink' : currentTask.type === 'truth' ? 'text-neon-blue' : 'text-neon-pink'
                                     }`}>
-                                    {currentTask.type}
+                                    {selectedGame === 'never_have_i_ever' ? 'Never Have I Ever' : currentTask.type}
                                 </h3>
 
                                 <p className="text-2xl md:text-3xl font-medium leading-relaxed mb-12">
@@ -347,18 +390,18 @@ export default function App() {
                                 <div className="flex w-full gap-4 mt-auto">
                                     <button
                                         onClick={() => handleOutcome(false)}
-                                        className="flex-1 py-4 rounded-xl border border-zinc-700 text-zinc-400 font-bold hover:bg-zinc-800 transition-colors"
+                                        className="flex-1 py-4 rounded-xl border border-zinc-700 text-zinc-400 font-bold hover:bg-zinc-800 transition-colors leading-tight"
                                     >
-                                        I didn't (0)
+                                        {selectedGame === 'never_have_i_ever' ? "I haven't (Safe)" : "I didn't (0)"}
                                     </button>
                                     <button
                                         onClick={() => handleOutcome(true)}
-                                        className={`flex-1 py-4 rounded-xl font-bold text-white transition-all shadow-lg ${currentTask.type === 'truth'
+                                        className={`flex-1 py-4 rounded-xl font-bold text-white transition-all shadow-lg leading-tight ${selectedGame === 'never_have_i_ever' ? 'bg-red-600 hover:bg-red-500 hover:shadow-[0_0_20px_rgba(220,38,38,0.6)]' : currentTask.type === 'truth'
                                             ? 'bg-neon-blue hover:bg-neon-blue/80 hover:shadow-[0_0_20px_rgba(6,182,212,0.6)]'
                                             : 'bg-neon-pink hover:bg-neon-pink/80 hover:shadow-[0_0_20px_rgba(236,72,153,0.6)]'
                                             }`}
                                     >
-                                        I did it (+1)
+                                        {selectedGame === 'never_have_i_ever' ? "I have (Drink & -1 ❤️)" : "I did it (+1)"}
                                     </button>
                                 </div>
                             </div>
@@ -381,17 +424,21 @@ export default function App() {
                     </h2>
 
                     <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-3xl p-6 mb-8 backdrop-blur-sm">
-                        <h3 className="text-xl uppercase tracking-widest text-zinc-400 text-center mb-6">Final Scores</h3>
+                        <h3 className="text-xl uppercase tracking-widest text-zinc-400 text-center mb-6">
+                            {selectedGame === 'never_have_i_ever' ? 'Survivors' : 'Final Scores'}
+                        </h3>
                         <div className="space-y-3">
-                            {players.sort((a, b) => b.score - a.score).map((p, index) => (
+                            {players.sort((a, b) => selectedGame === 'never_have_i_ever' ? b.lives - a.lives : b.score - a.score).map((p, index) => (
                                 <div key={p.id} className="flex justify-between items-center p-3 bg-zinc-800/50 rounded-xl">
                                     <div className="flex items-center gap-4">
                                         <span className={`font-black text-xl w-6 ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-zinc-500'}`}>
                                             #{index + 1}
                                         </span>
-                                        <span className="text-xl font-bold">{p.name}</span>
+                                        <span className={`text-xl font-bold ${selectedGame === 'never_have_i_ever' && p.lives === 0 ? 'text-zinc-600 line-through' : ''}`}>{p.name}</span>
                                     </div>
-                                    <span className="text-2xl font-mono font-black text-neon-pink">{p.score}</span>
+                                    <span className={`text-2xl font-mono font-black ${selectedGame === 'never_have_i_ever' ? 'text-red-500' : 'text-neon-pink'}`}>
+                                        {selectedGame === 'never_have_i_ever' ? "❤️".repeat(p.lives) || "💀" : p.score}
+                                    </span>
                                 </div>
                             ))}
                         </div>
