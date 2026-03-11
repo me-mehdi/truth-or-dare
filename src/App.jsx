@@ -27,19 +27,6 @@ export default function App() {
 
     // AI Integration
     const fetchAIQuestion = async (gameMode, subType) => {
-        const cacheKey = `ai_cache_${gameMode}_${subType || 'default'}`;
-        let cached = [];
-        try {
-            cached = JSON.parse(localStorage.getItem(cacheKey)) || [];
-        } catch (e) { console.error("Cache read error", e); }
-
-        if (cached.length > 0) {
-            // Use cached question, then remove it
-            const question = cached.pop();
-            localStorage.setItem(cacheKey, JSON.stringify(cached));
-            return question;
-        }
-
         // Determine Prompt
         let promptText = "You are a game designer creating a spicy 18+ party game for adult couples. Your job is to generate ONE unique question or dare. The text MUST BE SHORT, SIMPLE, direct, and under 15 words. NO long paragraphs. Return ONLY the text, NO quotes, NO emojis.";
         if (gameMode === 'truth_or_dare') {
@@ -98,16 +85,6 @@ export default function App() {
 
     // Would You Rather AI Gen handles JSON formatting separately
     const fetchWouldYouRather = async () => {
-        const cacheKey = `ai_cache_would_you_rather`;
-        let cached = [];
-        try { cached = JSON.parse(localStorage.getItem(cacheKey)) || []; } catch (e) { }
-
-        if (cached.length > 0) {
-            const item = cached.pop();
-            localStorage.setItem(cacheKey, JSON.stringify(cached));
-            return item;
-        }
-
         const promptText = `You are a game designer creating a spicy 18+ party game for adult couples. Create ONE unique, provocative 'Would You Rather' dilemma. Keep choices SHORT and simple, under 6 words each.
 You MUST return the output as a raw JSON string matching exactly this schema and nothing else (no markdown blocks, no conversational filler):
 { "text": "Would you rather [Short Choice A] or [Short Choice B]?", "optionA": "[Short Choice A]", "optionB": "[Short Choice B]", "statsA": [Random number 1-99 representing popularity percent] }`;
