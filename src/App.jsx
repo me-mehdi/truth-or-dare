@@ -75,23 +75,25 @@ export default function App() {
         // Fallback to local DB if API fails
         if (gameMode === 'would_you_rather') return null; // handled separately
 
-        let pool = [];
-        if (gameMode === 'truth_or_dare') {
-            pool = subType === 'truth' ? fallbackData.truths : fallbackData.dares;
-        } else if (gameMode === 'never_have_i_ever') {
-            pool = fallbackData.never_have_i_ever;
-        } else if (gameMode === 'most_likely_to') {
-            pool = fallbackData.most_likely_to;
-        } else if (gameMode === 'compatibility_test') {
-            pool = fallbackData.compatibility_test;
-        } else if (gameMode === 'light_dare') {
-            pool = fallbackData.light_dares;
-        }
+        // Deduplicated pop logic
+        const updatePool = (poolKey) => {
+            let pool = fallbackPools[poolKey] || [];
+            if (pool.length === 0) {
+                // If empty, re-shuffle from source
+                pool = [...(fallbackData[poolKey] || [])].sort(() => 0.5 - Math.random());
+            }
+            const item = pool.pop();
+            setFallbackPools(prev => ({ ...prev, [poolKey]: pool }));
+            return item || "Wildcard! Take a shot or kiss the person next to you.";
+        };
 
-        if (pool && pool.length > 0) {
-            return pool[Math.floor(Math.random() * pool.length)];
-        }
-        return "Uh oh, the AI got too hot to handle! (API Limit Reached - Please wait a moment or refresh)";
+        if (gameMode === 'truth_or_dare') return updatePool(subType === 'truth' ? 'truths' : 'dares');
+        if (gameMode === 'never_have_i_ever') return updatePool('never_have_i_ever');
+        if (gameMode === 'most_likely_to') return updatePool('most_likely_to');
+        if (gameMode === 'compatibility_test') return updatePool('compatibility_test');
+        if (gameMode === 'light_dare') return updatePool('light_dares');
+
+        return "Wildcard! Give a compliment to the person across from you.";
     };
 
     // Would You Rather AI Gen handles JSON formatting separately
@@ -124,13 +126,13 @@ You MUST return the output as a raw JSON string matching exactly this schema and
             }
         } catch (e) { console.error("WYR fetch failed", e); }
 
-        let pool = fallbackPools.would_you_rather;
+        let pool = fallbackPools.would_you_rather || [];
         if (pool.length === 0) {
-            pool = [...fallbackData.would_you_rather].sort(() => 0.5 - Math.random());
+            pool = [...(fallbackData.would_you_rather || [])].sort(() => 0.5 - Math.random());
         }
         const item = pool.pop();
         setFallbackPools(prev => ({ ...prev, would_you_rather: pool }));
-        return item || { text: "API Error: Would you rather wait a minute or refresh the page?", optionA: "Wait", optionB: "Refresh", statsA: 50 };
+        return item || { text: "Would you rather kiss the person to your left or right?", optionA: "Left", optionB: "Right", statsA: 50 };
     }
     const selectGame = (gameType) => {
         setSelectedGame(gameType);
