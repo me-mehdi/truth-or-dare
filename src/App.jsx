@@ -86,6 +86,18 @@ const content = {
         "Most likely to spend all their money on a ridiculous impulse buy.",
         "Most likely to randomly disappear and move to a new country.",
         "Most likely to start a cult by accident."
+    ],
+    would_you_rather: [
+        { text: "Would you rather always have to sing instead of speaking or always have to dance instead of walking?", optionA: "Sing instead of speaking", optionB: "Dance instead of walking", statsA: 34 },
+        { text: "Would you rather only be able to kiss for the rest of your life or only be able to hug?", optionA: "Only kiss", optionB: "Only hug", statsA: 68 },
+        { text: "Would you rather know how you die or when you die?", optionA: "How you die", optionB: "When you die", statsA: 42 },
+        { text: "Would you rather constantly itch or constantly be in pain?", optionA: "Constantly itch", optionB: "Constantly be in pain", statsA: 20 },
+        { text: "Would you rather find true love today or win the lottery next year?", optionA: "True love today", optionB: "Lottery next year", statsA: 55 },
+        { text: "Would you rather have a rewind button or a pause button on your life?", optionA: "Rewind button", optionB: "Pause button", statsA: 78 },
+        { text: "Would you rather never use the internet again or never go outside again?", optionA: "No internet", optionB: "No outside", statsA: 15 },
+        { text: "Would you rather accidentally like an old photo of your ex or accidentally text them 'I miss you'?", optionA: "Like an old photo", optionB: "Text 'I miss you'", statsA: 82 },
+        { text: "Would you rather always say everything on your mind or never speak again?", optionA: "Say everything", optionB: "Never speak", statsA: 30 },
+        { text: "Would you rather be famous when you are alive and forgotten when you die or unknown when you are alive but famous after you die?", optionA: "Famous alive", optionB: "Famous after death", statsA: 45 }
     ]
 };
 
@@ -106,8 +118,8 @@ export default function App() {
 
     // Gameplay State
     const [currentPlayer, setCurrentPlayer] = useState(null);
-    const [turnPhase, setTurnPhase] = useState('reveal'); // reveal, choice, task, outcome
-    const [currentTask, setCurrentTask] = useState({ type: null, text: null });
+    const [turnPhase, setTurnPhase] = useState('reveal'); // reveal, choice, task, stats, outcome
+    const [currentTask, setCurrentTask] = useState({ type: null, text: null, item: null });
 
     // --- HANDLERS ---
     const selectGame = (gameType) => {
@@ -151,7 +163,7 @@ export default function App() {
         const randomPlayer = players[Math.floor(Math.random() * players.length)];
         setCurrentPlayer(randomPlayer);
         setTurnPhase('reveal');
-        setCurrentTask({ type: null, text: null });
+        setCurrentTask({ type: null, text: null, item: null });
     };
 
     const handleChoice = (type) => {
@@ -169,6 +181,11 @@ export default function App() {
             const questions = content.most_likely_to;
             const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
             setCurrentTask({ type: 'most_likely_to', text: randomQuestion });
+            setTurnPhase('task');
+        } else if (selectedGame === 'would_you_rather') {
+            const questions = content.would_you_rather;
+            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            setCurrentTask({ type: 'would_you_rather', text: randomQuestion.text, item: randomQuestion });
             setTurnPhase('task');
         }
     };
@@ -190,6 +207,10 @@ export default function App() {
             // successOrId is the voted player's ID
             setPlayers(players.map(p =>
                 p.id === successOrId ? { ...p, score: p.score + 1 } : p
+            ));
+        } else if (selectedGame === 'would_you_rather') {
+            setPlayers(players.map(p =>
+                p.id === currentPlayer.id ? { ...p, score: p.score + 1 } : p
             ));
         }
 
@@ -357,9 +378,7 @@ export default function App() {
                                 <button
                                     onClick={() => {
                                         if (selectedGame === 'truth_or_dare') setTurnPhase('choice');
-                                        else handleChoice('never_have_i_ever'); // Works for both never have i ever and most likely to since logic in handleChoice uses selectedGame state, passing dummy arg is fine. But wait, handleChoice requires no param for most likely to either.
-                                        // Let's call it explicitly:
-                                        if (selectedGame === 'most_likely_to') handleChoice('most_likely_to');
+                                        else handleChoice(selectedGame);
                                     }}
                                     className="mt-8 px-8 py-3 rounded-full border border-zinc-700 hover:bg-zinc-800 transition-colors"
                                 >
@@ -398,20 +417,39 @@ export default function App() {
                         )}
 
                         {turnPhase === 'task' && (
-                            <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${selectedGame === 'never_have_i_ever' ? 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]' : selectedGame === 'most_likely_to' ? 'border-neon-purple shadow-[0_0_30px_rgba(168,85,247,0.3)]' : currentTask.type === 'truth'
+                            <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${selectedGame === 'never_have_i_ever' ? 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]' : selectedGame === 'most_likely_to' ? 'border-neon-purple shadow-[0_0_30px_rgba(168,85,247,0.3)]' : selectedGame === 'would_you_rather' ? 'border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]' : currentTask.type === 'truth'
                                 ? 'border-neon-blue shadow-[0_0_30px_rgba(6,182,212,0.3)]'
                                 : 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]'
                                 }`}>
-                                <h3 className={`text-2xl font-bold uppercase tracking-widest mb-6 ${selectedGame === 'never_have_i_ever' ? 'text-neon-pink' : selectedGame === 'most_likely_to' ? 'text-neon-purple' : currentTask.type === 'truth' ? 'text-neon-blue' : 'text-neon-pink'
+                                <h3 className={`text-2xl font-bold uppercase tracking-widest mb-6 ${selectedGame === 'never_have_i_ever' ? 'text-neon-pink' : selectedGame === 'most_likely_to' ? 'text-neon-purple' : selectedGame === 'would_you_rather' ? 'text-amber-500' : currentTask.type === 'truth' ? 'text-neon-blue' : 'text-neon-pink'
                                     }`}>
-                                    {selectedGame === 'never_have_i_ever' ? 'Never Have I Ever' : selectedGame === 'most_likely_to' ? 'Most Likely To' : currentTask.type}
+                                    {selectedGame === 'never_have_i_ever' ? 'Never Have I Ever' : selectedGame === 'most_likely_to' ? 'Most Likely To' : selectedGame === 'would_you_rather' ? 'Would You Rather' : currentTask.type}
                                 </h3>
 
                                 <p className="text-2xl md:text-3xl font-medium leading-relaxed mb-12">
                                     {currentTask.text}
                                 </p>
 
-                                {selectedGame === 'most_likely_to' ? (
+                                {selectedGame === 'would_you_rather' ? (
+                                    <div className="flex flex-col w-full gap-4 mt-auto">
+                                        <button
+                                            onClick={() => {
+                                                setTurnPhase('stats');
+                                            }}
+                                            className="w-full py-6 rounded-xl border border-amber-500/50 text-amber-500 font-bold hover:bg-amber-500 hover:text-white transition-all shadow-md leading-tight text-lg"
+                                        >
+                                            {currentTask.item?.optionA}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setTurnPhase('stats');
+                                            }}
+                                            className="w-full py-6 rounded-xl border border-teal-500/50 text-teal-500 font-bold hover:bg-teal-500 hover:text-white transition-all shadow-md leading-tight text-lg"
+                                        >
+                                            {currentTask.item?.optionB}
+                                        </button>
+                                    </div>
+                                ) : selectedGame === 'most_likely_to' ? (
                                     <div className="w-full flex flex-col gap-3 mt-auto">
                                         <p className="text-zinc-400 text-sm uppercase tracking-widest mb-2 font-bold animate-pulse">Count 1, 2, 3... and Vote!</p>
                                         <div className="grid grid-cols-2 gap-3">
@@ -445,6 +483,46 @@ export default function App() {
                                         </button>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {turnPhase === 'stats' && selectedGame === 'would_you_rather' && (
+                            <div className="w-full p-8 rounded-3xl border-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm">
+                                <h3 className="text-2xl font-bold uppercase tracking-widest text-amber-500 mb-6">Global Stats</h3>
+                                <p className="text-xl md:text-2xl font-medium leading-relaxed mb-8">
+                                    {currentTask.text}
+                                </p>
+
+                                <div className="w-full space-y-6 mb-12">
+                                    {/* Option A Stat */}
+                                    <div className="w-full">
+                                        <div className="flex justify-between text-sm font-bold mb-2">
+                                            <span className="text-amber-500 truncate max-w-[70%] text-left">{currentTask.item?.optionA}</span>
+                                            <span className="text-amber-500">{currentTask.item?.statsA}%</span>
+                                        </div>
+                                        <div className="w-full h-4 bg-zinc-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${currentTask.item?.statsA}%` }}></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Option B Stat */}
+                                    <div className="w-full">
+                                        <div className="flex justify-between text-sm font-bold mb-2">
+                                            <span className="text-teal-500 truncate max-w-[70%] text-left">{currentTask.item?.optionB}</span>
+                                            <span className="text-teal-500">{100 - currentTask.item?.statsA}%</span>
+                                        </div>
+                                        <div className="w-full h-4 bg-zinc-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-teal-500 transition-all duration-1000" style={{ width: `${100 - currentTask.item?.statsA}%` }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => handleOutcome(true)}
+                                    className="w-full py-4 rounded-xl font-bold text-white transition-all shadow-lg bg-amber-500 hover:bg-amber-600 hover:shadow-[0_0_20px_rgba(245,158,11,0.6)] uppercase tracking-widest"
+                                >
+                                    Next Turn
+                                </button>
                             </div>
                         )}
 
