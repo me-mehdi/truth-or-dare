@@ -40,18 +40,18 @@ export default function App() {
         }
 
         // Determine Prompt
-        let promptText = "You are a professional game designer and relationship expert creating a spicy, romantic party game exclusively for adult couples. Your job is to generate ONE unique, highly engaging question. The tone must be deeply romantic, playfully provocative, and designed to build tension between partners. Return ONLY the text of the question with NO quotes, NO conversational filler, and NO emojis.";
+        let promptText = "You are a game designer creating a spicy 18+ party game for adult couples. Your job is to generate ONE unique question or dare. The text MUST BE SHORT, SIMPLE, direct, and under 15 words. NO long paragraphs. Return ONLY the text, NO quotes, NO emojis.";
         if (gameMode === 'truth_or_dare') {
-            if (subType === 'truth') promptText += " Create a deep, intimate 'Truth' question to uncover romantic desires, secrets, or slightly spicy fantasies.";
-            if (subType === 'dare') promptText += " Create a sensual, physical, or highly romantic 'Dare' that tests their connection in the bedroom or living room.";
+            if (subType === 'truth') promptText += " Create a short, intimate 'Truth' question. Example: 'What is your biggest secret fantasy?'";
+            if (subType === 'dare') promptText += " Create a short, simple, sexy 'Dare'. Example: 'Kiss me on the neck for 10 seconds.'";
         } else if (gameMode === 'never_have_i_ever') {
-            promptText += " Create a scandalous, spicy, or playfully taboo 'Never have I ever' statement about dating boundaries or romantic experiences.";
+            promptText += " Create a short, scandalous 'Never have I ever' statement. Example: 'Never have I ever sent a nude.'";
         } else if (gameMode === 'most_likely_to') {
-            promptText += " Create a seductive or slightly spicy 'Most likely to' prompt. Start with 'Most likely to'.";
+            promptText += " Create a short, spicy 'Most likely to' prompt. Example: 'Most likely to suggest a threesome.'";
         } else if (gameMode === 'compatibility_test') {
-            promptText += " Create a deep, highly intimate relationship question for couples to test how well they know each other's romantic desires or secrets. For example: 'What is my ultimate hidden fantasy?'";
+            promptText += " Create a short relationship question for couples. Example: 'What is my favorite sexual position?'";
         } else if (gameMode === 'light_dare') {
-            promptText += " Create a slightly spicy, romantic penalty dare. Like 'Give me a sensual neck massage for 1 minute' or 'Kiss my inner thigh'.";
+            promptText += " Create a short romance penalty dare. Example: 'Give me a 30-second back rub.'";
         }
 
         try {
@@ -88,9 +88,9 @@ export default function App() {
             return item;
         }
 
-        const promptText = `You are a professional game designer creating a spicy, romantic party game exclusively for adult couples. Create ONE unique, provocative 'Would You Rather' dilemma that tests their relationship boundaries. 
+        const promptText = `You are a game designer creating a spicy 18+ party game for adult couples. Create ONE unique, provocative 'Would You Rather' dilemma. Keep choices SHORT and simple, under 6 words each.
 You MUST return the output as a raw JSON string matching exactly this schema and nothing else (no markdown blocks, no conversational filler):
-{ "text": "Would you rather [Intimate Choice A] or [Intimate Choice B]?", "optionA": "[Short Choice A]", "optionB": "[Short Choice B]", "statsA": [Random number 1-99 representing popularity percent] }`;
+{ "text": "Would you rather [Short Choice A] or [Short Choice B]?", "optionA": "[Short Choice A]", "optionB": "[Short Choice B]", "statsA": [Random number 1-99 representing popularity percent] }`;
 
         try {
             const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
