@@ -42,14 +42,19 @@ export default function App() {
             promptText += " Create a short romance penalty dare. Example: 'Give me a 30-second back rub.'";
         }
 
+        let abortTimer;
         try {
             const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
+            const controller = new AbortController();
+            abortTimer = setTimeout(() => controller.abort(), 4000);
+
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: promptText }] }]
-                })
+                }),
+                signal: controller.signal
             });
             const data = await response.json();
             if (data.candidates && data.candidates.length > 0) {
@@ -57,6 +62,8 @@ export default function App() {
             }
         } catch (e) {
             console.error("AI fetch failed, falling back to local DB", e);
+        } finally {
+            if (abortTimer) clearTimeout(abortTimer);
         }
 
         // Fallback to local DB if API fails
@@ -89,19 +96,28 @@ export default function App() {
 You MUST return the output as a raw JSON string matching exactly this schema and nothing else (no markdown blocks, no conversational filler):
 { "text": "Would you rather [Short Choice A] or [Short Choice B]?", "optionA": "[Short Choice A]", "optionB": "[Short Choice B]", "statsA": [Random number 1-99 representing popularity percent] }`;
 
+        let abortTimerWYR;
         try {
             const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
+            const controller = new AbortController();
+            abortTimerWYR = setTimeout(() => controller.abort(), 4000);
+
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+                body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] }),
+                signal: controller.signal
             });
             const data = await response.json();
             if (data.candidates && data.candidates.length > 0) {
                 const textOutput = data.candidates[0].content.parts[0].text.trim().replace(/```json|```/g, '');
                 return JSON.parse(textOutput);
             }
-        } catch (e) { console.error("WYR fetch failed", e); }
+        } catch (e) {
+            console.error("WYR fetch failed", e);
+        } finally {
+            if (abortTimerWYR) clearTimeout(abortTimerWYR);
+        }
 
         let pool = fallbackPools.would_you_rather || [];
         if (pool.length === 0) {
