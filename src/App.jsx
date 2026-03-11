@@ -55,7 +55,7 @@ export default function App() {
         }
 
         try {
-            const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCUAnN0lnDsOU-VB9Tnj3ywsFRpmyfzDlk", {
+            const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=AIzaSyCUAnN0lnDsOU-VB9Tnj3ywsFRpmyfzDlk", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -92,7 +92,7 @@ You MUST return the output as a raw JSON string matching exactly this schema and
 { "text": "Would you rather [Intimate Choice A] or [Intimate Choice B]?", "optionA": "[Short Choice A]", "optionB": "[Short Choice B]", "statsA": [Random number 1-99 representing popularity percent] }`;
 
         try {
-            const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCUAnN0lnDsOU-VB9Tnj3ywsFRpmyfzDlk", {
+            const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=AIzaSyCUAnN0lnDsOU-VB9Tnj3ywsFRpmyfzDlk", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
