@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import fallbackData from './fallbacks.json';
 
 // --- NO STATIC CONTENT (100% AI DRIVEN) ---// --- ICONS (lucide-react stand-ins using simple SVG) ---
 const TrashIcon = () => (
@@ -71,8 +72,25 @@ export default function App() {
             console.error("AI fetch failed, falling back to local DB", e);
         }
 
-        // Fallback to error message if API fails
+        // Fallback to local DB if API fails
         if (gameMode === 'would_you_rather') return null; // handled separately
+
+        let pool = [];
+        if (gameMode === 'truth_or_dare') {
+            pool = subType === 'truth' ? fallbackData.truths : fallbackData.dares;
+        } else if (gameMode === 'never_have_i_ever') {
+            pool = fallbackData.never_have_i_ever;
+        } else if (gameMode === 'most_likely_to') {
+            pool = fallbackData.most_likely_to;
+        } else if (gameMode === 'compatibility_test') {
+            pool = fallbackData.compatibility_test;
+        } else if (gameMode === 'light_dare') {
+            pool = fallbackData.light_dares;
+        }
+
+        if (pool && pool.length > 0) {
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
         return "Uh oh, the AI got too hot to handle! (API Limit Reached - Please wait a moment or refresh)";
     };
 
@@ -106,6 +124,10 @@ You MUST return the output as a raw JSON string matching exactly this schema and
             }
         } catch (e) { console.error("WYR fetch failed", e); }
 
+        const pool = fallbackData.would_you_rather;
+        if (pool && pool.length > 0) {
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
         return { text: "API Error: Would you rather wait a minute or refresh the page?", optionA: "Wait", optionB: "Refresh", statsA: 50 };
     }
     const selectGame = (gameType) => {
