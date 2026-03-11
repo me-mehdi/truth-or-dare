@@ -40,16 +40,16 @@ export default function App() {
         }
 
         // Determine Prompt
-        let promptText = "You are a professional game designer and relationship expert creating an edgy, seductive 18+ party game exclusively for adult couples. Your job is to generate ONE unique, highly engaging question. The tone must be intensely romantic, highly provocative, or playfully kink-oriented designed to build extreme tension between partners. Return ONLY the text of the question with NO quotes, NO conversational filler, and NO emojis.";
+        let promptText = "You are a professional game designer and relationship expert creating a spicy, romantic party game exclusively for adult couples. Your job is to generate ONE unique, highly engaging question. The tone must be deeply romantic, playfully provocative, and designed to build tension between partners. Return ONLY the text of the question with NO quotes, NO conversational filler, and NO emojis.";
         if (gameMode === 'truth_or_dare') {
-            if (subType === 'truth') promptText += " Create a deep, intimate, and sexually provocative 'Truth' question to uncover raw desires or past secrets.";
-            if (subType === 'dare') promptText += " Create an extremely sensual, physically intimate, or highly seductive 18+ 'Dare' that tests their boundaries in the bedroom or living room.";
+            if (subType === 'truth') promptText += " Create a deep, intimate 'Truth' question to uncover romantic desires, secrets, or slightly spicy fantasies.";
+            if (subType === 'dare') promptText += " Create a sensual, physical, or highly romantic 'Dare' that tests their connection in the bedroom or living room.";
         } else if (gameMode === 'never_have_i_ever') {
-            promptText += " Create an extremely scandalous, naughty, or taboo 18+ 'Never have I ever' statement about sexual boundaries or intimate experiences.";
+            promptText += " Create a scandalous, spicy, or playfully taboo 'Never have I ever' statement about dating boundaries or romantic experiences.";
         } else if (gameMode === 'most_likely_to') {
-            promptText += " Create a seductive or highly explicit 'Most likely to' prompt about dirty habits or bedroom behavior. Start with 'Most likely to'.";
+            promptText += " Create a seductive or slightly spicy 'Most likely to' prompt. Start with 'Most likely to'.";
         } else if (gameMode === 'compatibility_test') {
-            promptText += " Create a deep, highly intimate relationship question for couples to test how well they know each other's deepest desires or dark secrets. For example: 'What is my ultimate hidden fantasy?'";
+            promptText += " Create a deep, highly intimate relationship question for couples to test how well they know each other's romantic desires or secrets. For example: 'What is my ultimate hidden fantasy?'";
         } else if (gameMode === 'light_dare') {
             promptText += " Create a slightly spicy, romantic penalty dare. Like 'Give me a sensual neck massage for 1 minute' or 'Kiss my inner thigh'.";
         }
@@ -87,12 +87,13 @@ export default function App() {
             return item;
         }
 
-        const promptText = `You are a professional game designer creating an edgy, seductive 18+ party game exclusively for adult couples. Create ONE unique, highly provocative, sexually charged 'Would You Rather' dilemma. 
+        const promptText = `You are a professional game designer creating a spicy, romantic party game exclusively for adult couples. Create ONE unique, provocative 'Would You Rather' dilemma that tests their relationship boundaries. 
 You MUST return the output as a raw JSON string matching exactly this schema and nothing else (no markdown blocks, no conversational filler):
 { "text": "Would you rather [Intimate Choice A] or [Intimate Choice B]?", "optionA": "[Short Choice A]", "optionB": "[Short Choice B]", "statsA": [Random number 1-99 representing popularity percent] }`;
 
         try {
-            const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=AIzaSyCUAnN0lnDsOU-VB9Tnj3ywsFRpmyfzDlk", {
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
