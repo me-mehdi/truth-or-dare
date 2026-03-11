@@ -27,7 +27,29 @@ export default function App() {
 
     // AI Integration
     const fetchAIQuestion = async (gameMode, subType) => {
-        // Determine Prompt
+        if (gameMode === 'would_you_rather') return null; // handled separately
+
+        const getPoolKey = () => {
+            if (gameMode === 'truth_or_dare') return subType === 'truth' ? 'truths' : 'dares';
+            if (gameMode === 'never_have_i_ever') return 'never_have_i_ever';
+            if (gameMode === 'most_likely_to') return 'most_likely_to';
+            if (gameMode === 'compatibility_test') return 'compatibility_test';
+            if (gameMode === 'light_dare') return 'light_dares';
+            return null;
+        };
+
+        const poolKey = getPoolKey();
+        if (poolKey) {
+            let pool = fallbackPools[poolKey] || [];
+            // If we have local fallbacks left, use them instantly!
+            if (pool.length > 0) {
+                const item = pool.pop();
+                setFallbackPools(prev => ({ ...prev, [poolKey]: pool }));
+                return item;
+            }
+        }
+
+        // Only hits AI if the local pool is COMPLETELY EMPTY
         let promptText = "You are a game designer creating a spicy 18+ party game for adult couples. Your job is to generate ONE unique question or dare. The text MUST BE SHORT, SIMPLE, direct, and under 15 words. NO long paragraphs. Return ONLY the text, NO quotes, NO emojis.";
         if (gameMode === 'truth_or_dare') {
             if (subType === 'truth') promptText += " Create a short, intimate 'Truth' question. Example: 'What is your biggest secret fantasy?'";
@@ -61,35 +83,31 @@ export default function App() {
                 return data.candidates[0].content.parts[0].text.trim();
             }
         } catch (e) {
-            console.error("AI fetch failed, falling back to local DB", e);
+            console.error("AI fetch failed, fully out of fallbacks. Regenerating from source.", e);
         }
 
-        // Fallback to local DB if API fails
-        if (gameMode === 'would_you_rather') return null; // handled separately
-
-        // Deduplicated pop logic
-        const updatePool = (poolKey) => {
-            let pool = fallbackPools[poolKey] || [];
-            if (pool.length === 0) {
-                // If empty, re-shuffle from source
-                pool = [...(fallbackData[poolKey] || [])].sort(() => 0.5 - Math.random());
-            }
+        // Absolute Last Resort: Re-shuffle from source DB if AI hits rate limits and local array was empty
+        if (poolKey) {
+            let pool = [...(fallbackData[poolKey] || [])].sort(() => 0.5 - Math.random());
             const item = pool.pop();
             setFallbackPools(prev => ({ ...prev, [poolKey]: pool }));
             return item || "Wildcard! Take a shot or kiss the person next to you.";
-        };
-
-        if (gameMode === 'truth_or_dare') return updatePool(subType === 'truth' ? 'truths' : 'dares');
-        if (gameMode === 'never_have_i_ever') return updatePool('never_have_i_ever');
-        if (gameMode === 'most_likely_to') return updatePool('most_likely_to');
-        if (gameMode === 'compatibility_test') return updatePool('compatibility_test');
-        if (gameMode === 'light_dare') return updatePool('light_dares');
+        }
 
         return "Wildcard! Give a compliment to the person across from you.";
     };
 
     // Would You Rather AI Gen handles JSON formatting separately
     const fetchWouldYouRather = async () => {
+        let pool = fallbackPools.would_you_rather || [];
+        // If we have local fallbacks left, use them instantly!
+        if (pool.length > 0) {
+            const item = pool.pop();
+            setFallbackPools(prev => ({ ...prev, would_you_rather: pool }));
+            return item;
+        }
+
+        // Only hits AI if the local pool is COMPLETELY EMPTY
         const promptText = `You are a game designer creating a spicy 18+ party game for adult couples. Create ONE unique, provocative 'Would You Rather' dilemma. Keep choices SHORT and simple, under 6 words each.
 You MUST return the output as a raw JSON string matching exactly this schema and nothing else (no markdown blocks, no conversational filler):
 { "text": "Would you rather [Short Choice A] or [Short Choice B]?", "optionA": "[Short Choice A]", "optionB": "[Short Choice B]", "statsA": [Random number 1-99 representing popularity percent] }`;
@@ -112,13 +130,11 @@ You MUST return the output as a raw JSON string matching exactly this schema and
                 return JSON.parse(textOutput);
             }
         } catch (e) {
-            console.error("WYR fetch failed", e);
+            console.error("WYR fetch failed, fully out of fallbacks. Regenerating from source", e);
         }
 
-        let pool = fallbackPools.would_you_rather || [];
-        if (pool.length === 0) {
-            pool = [...(fallbackData.would_you_rather || [])].sort(() => 0.5 - Math.random());
-        }
+        // Absolute Last Resort: Re-shuffle from source DB if AI hits rate limits and local array was empty
+        pool = [...(fallbackData.would_you_rather || [])].sort(() => 0.5 - Math.random());
         const item = pool.pop();
         setFallbackPools(prev => ({ ...prev, would_you_rather: pool }));
         return item || { text: "Would you rather kiss the person to your left or right?", optionA: "Left", optionB: "Right", statsA: 50 };
@@ -127,6 +143,7 @@ You MUST return the output as a raw JSON string matching exactly this schema and
         setSelectedGame(gameType);
         setPhase('players');
     };
+
 
     const addPlayer = (e) => {
         e.preventDefault();
