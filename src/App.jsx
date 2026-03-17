@@ -132,31 +132,23 @@ export default function App() {
     };
 
     const nextTurn = (forcedIndex = null) => {
-        let nextIdx;
-        if (forcedIndex !== null) {
-            nextIdx = forcedIndex;
-        } else {
-            nextIdx = (currentPlayerIndex + 1) % players.length;
-        }
-        
-        setCurrentPlayerIndex(nextIdx);
-
-        if (selectedGame === 'compatibility_test' && players.length >= 2) {
-            // For compatibility, we still select a random partner but the "active" player is sequential
-            const p1 = players[nextIdx];
-            let p2Candidate;
-            do {
-                p2Candidate = players[Math.floor(Math.random() * players.length)];
-            } while (p2Candidate.id === p1.id);
-            
-            setCurrentPair([p1, p2Candidate]);
-            setCurrentPlayer(null);
-        } else {
-            setCurrentPlayer(players[nextIdx]);
-            setCurrentPair(null);
-        }
         setTurnPhase('reveal');
         setCurrentTask({ type: null, text: null, item: null });
+
+        setCurrentPlayerIndex(prevIdx => {
+            const nextIdx = forcedIndex !== null ? forcedIndex : (prevIdx + 1) % players.length;
+            
+            if (selectedGame === 'compatibility_test' && players.length >= 2) {
+                const partnerIdx = (nextIdx + 1) % players.length;
+                setCurrentPair([players[nextIdx], players[partnerIdx]]);
+                setCurrentPlayer(null);
+            } else {
+                setCurrentPlayer(players[nextIdx]);
+                setCurrentPair(null);
+            }
+            
+            return nextIdx;
+        });
     };
 
     const handleChoice = async (type) => {
