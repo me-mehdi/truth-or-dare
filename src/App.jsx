@@ -8,6 +8,18 @@ const TrashIcon = () => (
     </svg>
 );
 
+// --- HELPERS ---
+const dedupe = (arr) => [...new Set(arr)].sort(() => 0.5 - Math.random());
+const dedupeObjects = (arr) => {
+    const seen = new Set();
+    return arr.filter(item => {
+        const s = JSON.stringify(item);
+        if (seen.has(s)) return false;
+        seen.add(s);
+        return true;
+    }).sort(() => 0.5 - Math.random());
+};
+
 export default function App() {
     // --- STATE ---
     const [phase, setPhase] = useState('landing'); // landing, players, gameplay, endgame
@@ -18,20 +30,21 @@ export default function App() {
 
     // Gameplay State
     const [currentPlayer, setCurrentPlayer] = useState(null);
+    const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
     const [currentPair, setCurrentPair] = useState(null); // Used for compatibility test
     const [stats, setStats] = useState({ compatibilityMatches: 0, compatibilityTurns: 0 }); // Global stats for couples game
     const [turnPhase, setTurnPhase] = useState('reveal'); // reveal, loading, choice, task, stats, outcome
     const [currentTask, setCurrentTask] = useState({ type: null, text: null, item: null });
 
-    // Offline Data Pools
+    // Offline Data Pools (Strictly De-duplicated)
     const [fallbackPools, setFallbackPools] = useState({
-        truths: [...(fallbackData.truths || [])].sort(() => 0.5 - Math.random()),
-        dares: [...(fallbackData.dares || [])].sort(() => 0.5 - Math.random()),
-        never_have_i_ever: [...(fallbackData.never_have_i_ever || [])].sort(() => 0.5 - Math.random()),
-        most_likely_to: [...(fallbackData.most_likely_to || [])].sort(() => 0.5 - Math.random()),
-        compatibility_test: [...(fallbackData.compatibility_test || [])].sort(() => 0.5 - Math.random()),
-        light_dares: [...(fallbackData.light_dares || [])].sort(() => 0.5 - Math.random()),
-        would_you_rather: [...(fallbackData.would_you_rather || [])].sort(() => 0.5 - Math.random()),
+        truths: dedupe(fallbackData.truths || []),
+        dares: dedupe(fallbackData.dares || []),
+        never_have_i_ever: dedupe(fallbackData.never_have_i_ever || []),
+        most_likely_to: dedupe(fallbackData.most_likely_to || []),
+        compatibility_test: dedupe(fallbackData.compatibility_test || []),
+        light_dares: dedupe(fallbackData.light_dares || []),
+        would_you_rather: dedupeObjects(fallbackData.would_you_rather || []),
     });
 
     // --- HANDLERS ---
@@ -55,9 +68,9 @@ export default function App() {
 
         let pool = [...(fallbackPools[poolKey] || [])];
         
-        // If pool is empty, reshuffle from source
+        // If pool is empty, reshuffle from source (Strictly De-duplicated)
         if (pool.length === 0) {
-            pool = [...(fallbackData[poolKey] || [])].sort(() => 0.5 - Math.random());
+            pool = dedupe(fallbackData[poolKey] || []);
         }
 
         const item = pool.pop();
@@ -69,8 +82,9 @@ export default function App() {
     const fetchWouldYouRather = async () => {
         let pool = [...(fallbackPools.would_you_rather || [])];
         
+        // If pool is empty, reshuffle from source (Strictly De-duplicated)
         if (pool.length === 0) {
-            pool = [...(fallbackData.would_you_rather || [])].sort(() => 0.5 - Math.random());
+            pool = dedupeObjects(fallbackData.would_you_rather || []);
         }
 
         const item = pool.pop();
@@ -97,10 +111,11 @@ export default function App() {
     const startGame = () => {
         if (players.length === 0) return;
         // reset scores and lives if starting fresh
+        setCurrentPlayerIndex(0);
         setPlayers(players.map(p => ({ ...p, score: 0, lives: 5 })));
         setStats({ compatibilityMatches: 0, compatibilityTurns: 0 });
         setPhase('gameplay');
-        nextTurn();
+        nextTurn(0);
     };
 
     const endGame = () => {
@@ -116,14 +131,28 @@ export default function App() {
         setSelectedGame(null);
     };
 
-    const nextTurn = () => {
+    const nextTurn = (forcedIndex = null) => {
+        let nextIdx;
+        if (forcedIndex !== null) {
+            nextIdx = forcedIndex;
+        } else {
+            nextIdx = (currentPlayerIndex + 1) % players.length;
+        }
+        
+        setCurrentPlayerIndex(nextIdx);
+
         if (selectedGame === 'compatibility_test' && players.length >= 2) {
-            let shuffled = [...players].sort(() => 0.5 - Math.random());
-            setCurrentPair([shuffled[0], shuffled[1]]);
+            // For compatibility, we still select a random partner but the "active" player is sequential
+            const p1 = players[nextIdx];
+            let p2Candidate;
+            do {
+                p2Candidate = players[Math.floor(Math.random() * players.length)];
+            } while (p2Candidate.id === p1.id);
+            
+            setCurrentPair([p1, p2Candidate]);
             setCurrentPlayer(null);
         } else {
-            const randomPlayer = players[Math.floor(Math.random() * players.length)];
-            setCurrentPlayer(randomPlayer);
+            setCurrentPlayer(players[nextIdx]);
             setCurrentPair(null);
         }
         setTurnPhase('reveal');
