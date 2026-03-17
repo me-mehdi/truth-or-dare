@@ -244,7 +244,7 @@ export default function App() {
                     {selectedGame === 'never_have_i_ever' ? 'Lives' : 'Scores'}
                 </h3>
                 <div className="space-y-1">
-                    {players.sort((a, b) => selectedGame === 'never_have_i_ever' ? b.lives - a.lives : b.score - a.score).map(p => (
+                    {[...players].sort((a, b) => selectedGame === 'never_have_i_ever' ? b.lives - a.lives : b.score - a.score).map(p => (
                         <div key={p.id} className="flex justify-between items-center text-sm gap-4">
                             <span className={`truncate max-w-[80px] ${selectedGame === 'never_have_i_ever' && p.lives === 0 ? 'text-zinc-600 line-through' : 'text-gray-300'}`}>{p.name}</span>
                             <span className={`font-mono font-bold ${selectedGame === 'never_have_i_ever' ? (p.lives > 2 ? 'text-green-400' : p.lives > 0 ? 'text-amber-400' : 'text-red-600') : 'text-neon-blue'}`}>
@@ -604,7 +604,7 @@ export default function App() {
                             {selectedGame === 'never_have_i_ever' ? 'Survivors' : 'Final Scores'}
                         </h3>
                         <div className="space-y-3">
-                            {players.sort((a, b) => selectedGame === 'never_have_i_ever' ? b.lives - a.lives : b.score - a.score).map((p, index) => (
+                            {[...players].sort((a, b) => selectedGame === 'never_have_i_ever' ? b.lives - a.lives : b.score - a.score).map((p, index) => (
                                 <div key={p.id} className="flex justify-between items-center p-3 bg-zinc-800/50 rounded-xl">
                                     <div className="flex items-center gap-4">
                                         <span className={`font-black text-xl w-6 ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-zinc-500'}`}>
