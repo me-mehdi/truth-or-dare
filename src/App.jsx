@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import fallbackData from './fallbacks.json';
 
-// --- NO STATIC CONTENT (100% AI DRIVEN) ---// --- ICONS (lucide-react stand-ins using simple SVG) ---
+// --- ICONS (lucide-react stand-ins using simple SVG) ---
 const TrashIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
@@ -23,11 +23,23 @@ export default function App() {
     const [turnPhase, setTurnPhase] = useState('reveal'); // reveal, loading, choice, task, stats, outcome
     const [currentTask, setCurrentTask] = useState({ type: null, text: null, item: null });
 
+    // Offline Data Pools
+    const [fallbackPools, setFallbackPools] = useState({
+        truths: [...(fallbackData.truths || [])].sort(() => 0.5 - Math.random()),
+        dares: [...(fallbackData.dares || [])].sort(() => 0.5 - Math.random()),
+        never_have_i_ever: [...(fallbackData.never_have_i_ever || [])].sort(() => 0.5 - Math.random()),
+        most_likely_to: [...(fallbackData.most_likely_to || [])].sort(() => 0.5 - Math.random()),
+        compatibility_test: [...(fallbackData.compatibility_test || [])].sort(() => 0.5 - Math.random()),
+        light_dares: [...(fallbackData.light_dares || [])].sort(() => 0.5 - Math.random()),
+        would_you_rather: [...(fallbackData.would_you_rather || [])].sort(() => 0.5 - Math.random()),
+    });
+
     // --- HANDLERS ---
 
     // AI Integration
+    // --- OFFLINE FETCHERS ---
     const fetchAIQuestion = async (gameMode, subType) => {
-        if (gameMode === 'would_you_rather') return null; // handled separately
+        if (gameMode === 'would_you_rather') return null;
 
         const getPoolKey = () => {
             if (gameMode === 'truth_or_dare') return subType === 'truth' ? 'truths' : 'dares';
@@ -39,102 +51,28 @@ export default function App() {
         };
 
         const poolKey = getPoolKey();
-        if (poolKey) {
-            let pool = fallbackPools[poolKey] || [];
-            // If we have local fallbacks left, use them instantly!
-            if (pool.length > 0) {
-                const item = pool.pop();
-                setFallbackPools(prev => ({ ...prev, [poolKey]: pool }));
-                return item;
-            }
+        if (!poolKey) return "Wildcard! Take a shot.";
+
+        let pool = [...(fallbackPools[poolKey] || [])];
+        
+        // If pool is empty, reshuffle from source
+        if (pool.length === 0) {
+            pool = [...(fallbackData[poolKey] || [])].sort(() => 0.5 - Math.random());
         }
 
-        // Only hits AI if the local pool is COMPLETELY EMPTY
-        let promptText = "You are a game designer creating a spicy 18+ party game for adult couples. Your job is to generate ONE unique question or dare. The text MUST BE SHORT, SIMPLE, direct, and under 15 words. NO long paragraphs. Return ONLY the text, NO quotes, NO emojis.";
-        if (gameMode === 'truth_or_dare') {
-            if (subType === 'truth') promptText += " Create a short, intimate 'Truth' question. Example: 'What is your biggest secret fantasy?'";
-            if (subType === 'dare') promptText += " Create a short, simple, sexy 'Dare'. Example: 'Kiss me on the neck for 10 seconds.'";
-        } else if (gameMode === 'never_have_i_ever') {
-            promptText += " Create a short, scandalous 'Never have I ever' statement. Example: 'Never have I ever sent a nude.'";
-        } else if (gameMode === 'most_likely_to') {
-            promptText += " Create a short, spicy 'Most likely to' prompt. Example: 'Most likely to suggest a threesome.'";
-        } else if (gameMode === 'compatibility_test') {
-            promptText += " Create a short relationship question for couples. Example: 'What is my favorite sexual position?'";
-        } else if (gameMode === 'light_dare') {
-            promptText += " Create a short romance penalty dare. Example: 'Give me a 30-second back rub.'";
-        }
-
-        try {
-            const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
-
-            const fetchPromise = fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptText }] }]
-                })
-            });
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Request Timeout")), 4000));
-
-            const response = await Promise.race([fetchPromise, timeoutPromise]);
-            const data = await response.json();
-
-            if (data.candidates && data.candidates.length > 0) {
-                return data.candidates[0].content.parts[0].text.trim();
-            }
-        } catch (e) {
-            console.error("AI fetch failed, fully out of fallbacks. Regenerating from source.", e);
-        }
-
-        // Absolute Last Resort: Re-shuffle from source DB if AI hits rate limits and local array was empty
-        if (poolKey) {
-            let pool = [...(fallbackData[poolKey] || [])].sort(() => 0.5 - Math.random());
-            const item = pool.pop();
-            setFallbackPools(prev => ({ ...prev, [poolKey]: pool }));
-            return item || "Wildcard! Take a shot or kiss the person next to you.";
-        }
-
-        return "Wildcard! Give a compliment to the person across from you.";
+        const item = pool.pop();
+        setFallbackPools(prev => ({ ...prev, [poolKey]: pool }));
+        return item || "Wildcard! Take a shot.";
     };
 
     // Would You Rather AI Gen handles JSON formatting separately
     const fetchWouldYouRather = async () => {
-        let pool = fallbackPools.would_you_rather || [];
-        // If we have local fallbacks left, use them instantly!
-        if (pool.length > 0) {
-            const item = pool.pop();
-            setFallbackPools(prev => ({ ...prev, would_you_rather: pool }));
-            return item;
+        let pool = [...(fallbackPools.would_you_rather || [])];
+        
+        if (pool.length === 0) {
+            pool = [...(fallbackData.would_you_rather || [])].sort(() => 0.5 - Math.random());
         }
 
-        // Only hits AI if the local pool is COMPLETELY EMPTY
-        const promptText = `You are a game designer creating a spicy 18+ party game for adult couples. Create ONE unique, provocative 'Would You Rather' dilemma. Keep choices SHORT and simple, under 6 words each.
-You MUST return the output as a raw JSON string matching exactly this schema and nothing else (no markdown blocks, no conversational filler):
-{ "text": "Would you rather [Short Choice A] or [Short Choice B]?", "optionA": "[Short Choice A]", "optionB": "[Short Choice B]", "statsA": [Random number 1-99 representing popularity percent] }`;
-
-        try {
-            const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
-
-            const fetchPromise = fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-            });
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Request Timeout")), 4000));
-
-            const response = await Promise.race([fetchPromise, timeoutPromise]);
-            const data = await response.json();
-
-            if (data.candidates && data.candidates.length > 0) {
-                const textOutput = data.candidates[0].content.parts[0].text.trim().replace(/```json|```/g, '');
-                return JSON.parse(textOutput);
-            }
-        } catch (e) {
-            console.error("WYR fetch failed, fully out of fallbacks. Regenerating from source", e);
-        }
-
-        // Absolute Last Resort: Re-shuffle from source DB if AI hits rate limits and local array was empty
-        pool = [...(fallbackData.would_you_rather || [])].sort(() => 0.5 - Math.random());
         const item = pool.pop();
         setFallbackPools(prev => ({ ...prev, would_you_rather: pool }));
         return item || { text: "Would you rather kiss the person to your left or right?", optionA: "Left", optionB: "Right", statsA: 50 };
@@ -194,25 +132,20 @@ You MUST return the output as a raw JSON string matching exactly this schema and
 
     const handleChoice = async (type) => {
         if (selectedGame === 'truth_or_dare') {
-            setTurnPhase('loading');
             const randomQuestion = await fetchAIQuestion('truth_or_dare', type);
             setCurrentTask({ type, text: randomQuestion });
             setTurnPhase('task');
         } else if (selectedGame === 'never_have_i_ever') {
-            setTurnPhase('loading');
             const randomQuestion = await fetchAIQuestion('never_have_i_ever');
             setCurrentTask({ type: 'never_have_i_ever', text: randomQuestion });
             setTurnPhase('task');
         } else if (selectedGame === 'most_likely_to') {
-            setTurnPhase('loading');
             const randomQuestion = await fetchAIQuestion('most_likely_to');
             setCurrentTask({ type: 'most_likely_to', text: randomQuestion });
             setTurnPhase('task');
         } else if (selectedGame === 'would_you_rather') {
-            // Deprecated path: `initWYRTurn` handles this now via Next Turn button bypassing choice menu entirely
             setTurnPhase('task');
         } else if (selectedGame === 'compatibility_test') {
-            setTurnPhase('loading');
             const randomQuestion = await fetchAIQuestion('compatibility_test');
             setCurrentTask({ type: 'compatibility_test', text: randomQuestion });
             setTurnPhase('task');
@@ -230,7 +163,6 @@ You MUST return the output as a raw JSON string matching exactly this schema and
                 setTurnPhase('outcome');
                 setTimeout(nextTurn, 1000);
             } else {
-                setTurnPhase('loading');
                 const randomDare = await fetchAIQuestion('light_dare');
                 setCurrentTask({ type: 'light_dare', text: randomDare });
                 setTurnPhase('task');
@@ -272,7 +204,6 @@ You MUST return the output as a raw JSON string matching exactly this schema and
     };
 
     const handleChoiceWYR = async () => {
-        setTurnPhase('loading');
         const randomItem = await fetchWouldYouRather();
         if (randomItem) {
             setCurrentTask({ type: 'would_you_rather', text: randomItem.text, item: randomItem });
@@ -494,14 +425,6 @@ You MUST return the output as a raw JSON string matching exactly this schema and
                             </div>
                         )}
 
-                        {turnPhase === 'loading' && (
-                            <div className="text-center flex flex-col items-center justify-center animate-pulse">
-                                <div className="w-16 h-16 border-4 border-neon-purple border-t-transparent rounded-full animate-spin mb-6"></div>
-                                <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple tracking-widest uppercase">
-                                    The AI is thinking...
-                                </h2>
-                            </div>
-                        )}
 
                         {turnPhase === 'task' && (
                             <div className={`w-full p-8 rounded-3xl border-2 flex flex-col items-center text-center animate-in zoom-in duration-500 bg-zinc-900/80 backdrop-blur-sm ${selectedGame === 'never_have_i_ever' ? 'border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.3)]' : selectedGame === 'most_likely_to' ? 'border-neon-purple shadow-[0_0_30px_rgba(168,85,247,0.3)]' : selectedGame === 'would_you_rather' ? 'border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]' : selectedGame === 'compatibility_test' ? 'border-teal-500 shadow-[0_0_30px_rgba(20,184,166,0.3)]' : currentTask.type === 'truth'
